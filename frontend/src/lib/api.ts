@@ -33,9 +33,8 @@ class ApiClient {
       url += `?${searchParams.toString()}`
     }
 
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      ...init.headers,
     }
 
     const token = this.getToken()
