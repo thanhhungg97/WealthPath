@@ -1,0 +1,23 @@
+# Example Caddyfile for WealthPath
+# Copy to /etc/caddy/Caddyfile and replace your-domain.com
+
+your-domain.com {
+    # Frontend & API proxy
+    reverse_proxy localhost:3000
+    
+    # Enable compression
+    encode gzip
+    
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+    }
+}
+
+# Optional: www redirect
+www.your-domain.com {
+    redir https://your-domain.com{uri} permanent
+}
+

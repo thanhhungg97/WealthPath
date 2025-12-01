@@ -1,0 +1,22 @@
+# Copy this to terraform.tfvars and fill in your values
+
+# Choose provider: "digitalocean" or "hetzner"
+provider_choice = "digitalocean"
+
+# DigitalOcean token (get from https://cloud.digitalocean.com/account/api/tokens)
+do_token = "dop_v1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# Hetzner token (get from https://console.hetzner.cloud/projects/*/security/tokens)
+hcloud_token = ""
+
+# Your SSH public key (cat ~/.ssh/id_rsa.pub)
+ssh_public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC..."
+
+# Your domain (optional - leave empty to use IP)
+domain = "wealthpath.example.com"
+
+# Region
+# DigitalOcean: nyc1, nyc3, sfo1, sfo3, ams3, sgp1, lon1, fra1, tor1, blr1
+# Hetzner: nbg1 (Nuremberg), fsn1 (Falkenstein), hel1 (Helsinki), ash (Ashburn)
+region = "nyc1"
+
