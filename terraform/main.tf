@@ -13,14 +13,18 @@ terraform {
       source  = "hetznercloud/hcloud"
       version = "~> 1.45"
     }
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
   }
 }
 
 # Variables
 variable "provider_choice" {
-  description = "Cloud provider: digitalocean or hetzner"
+  description = "Cloud provider: digitalocean, hetzner, or aws"
   type        = string
-  default     = "digitalocean"
+  default     = "aws"
 }
 
 variable "do_token" {
