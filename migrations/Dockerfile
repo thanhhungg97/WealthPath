@@ -1,7 +1,10 @@
-FROM flyway/flyway:10-alpine
+FROM postgres:16-alpine
 
-COPY sql /flyway/sql
-COPY flyway.conf /flyway/conf/flyway.conf
+WORKDIR /app
 
-ENTRYPOINT ["flyway", "migrate"]
+COPY sql/ /app/sql/
+COPY migrate.sh /app/migrate.sh
 
+RUN chmod +x /app/migrate.sh
+
+CMD ["/app/migrate.sh"]
