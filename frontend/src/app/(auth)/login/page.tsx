@@ -45,14 +45,15 @@ function LoginContent() {
     const error = searchParams.get("error")
 
     if (token) {
-      setToken(token)
-      router.push("/dashboard")
+      setToken(token).then(() => {
+        router.push("/dashboard")
+      })
     }
 
     if (error) {
       toast({
         title: "Login failed",
-        description: error === "oauth_failed" ? "Facebook login failed" : error,
+        description: error === "oauth_failed" ? "OAuth login failed" : error,
         variant: "destructive",
       })
     }

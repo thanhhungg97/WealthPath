@@ -82,7 +82,7 @@ func main() {
 	// Public routes
 	r.Post("/api/auth/register", authHandler.Register)
 	r.Post("/api/auth/login", authHandler.Login)
-	
+
 	// OAuth routes - supports facebook, google, etc.
 	r.Get("/api/auth/{provider}", oauthHandler.OAuthLogin)
 	r.Get("/api/auth/{provider}/callback", oauthHandler.OAuthCallback)
@@ -91,6 +91,9 @@ func main() {
 	// Protected routes
 	r.Group(func(r chi.Router) {
 		r.Use(handler.AuthMiddleware)
+
+		// Current user
+		r.Get("/api/auth/me", authHandler.Me)
 
 		// Dashboard
 		r.Get("/api/dashboard", dashboardHandler.GetDashboard)

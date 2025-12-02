@@ -61,3 +61,19 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, resp)
 }
 
+func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
+	userID := GetUserID(r.Context())
+	if userID == nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	user, err := h.userService.GetByID(r.Context(), *userID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "user not found")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, user)
+}
+

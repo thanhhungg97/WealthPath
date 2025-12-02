@@ -40,7 +40,7 @@ func (h *OAuthHandler) OAuthLogin(w http.ResponseWriter, r *http.Request) {
 func (h *OAuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	providerName := chi.URLParam(r, "provider")
 	code := r.URL.Query().Get("code")
-	
+
 	frontendURL := os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
 		frontendURL = "http://localhost:3000"
@@ -63,12 +63,12 @@ func (h *OAuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 // OAuthToken handles token-based OAuth login (for frontend SDKs)
 func (h *OAuthHandler) OAuthToken(w http.ResponseWriter, r *http.Request) {
 	providerName := chi.URLParam(r, "provider")
-	
+
 	var input struct {
 		AccessToken string `json:"accessToken"`
 		IDToken     string `json:"idToken"` // For Google
 	}
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return

@@ -10,7 +10,7 @@ interface AuthState {
   register: (email: string, password: string, name: string) => Promise<void>
   logout: () => void
   setUser: (user: User | null) => void
-  setToken: (token: string) => void
+  setToken: (token: string) => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -53,10 +53,15 @@ export const useAuthStore = create<AuthState>()(
         set({ user, isAuthenticated: !!user })
       },
 
-      setToken: (token) => {
+      setToken: async (token) => {
         api.setToken(token)
-        // Decode token to get basic user info (we'll fetch full user later)
-        set({ isAuthenticated: true })
+        set({ isAuthenticated: true, isLoading: true })
+        try {
+          const user = await api.getMe()
+          set({ user, isLoading: false })
+        } catch {
+          set({ isLoading: false })
+        }
       },
     }),
     {

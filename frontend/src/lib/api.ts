@@ -71,6 +71,10 @@ class ApiClient {
     })
   }
 
+  async getMe() {
+    return this.request<User>("/api/auth/me")
+  }
+
   // Dashboard
   async getDashboard() {
     return this.request<DashboardData>("/api/dashboard")
