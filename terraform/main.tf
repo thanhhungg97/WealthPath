@@ -98,25 +98,25 @@ locals {
     
     # Create .env
     cat > .env << ENVEOF
-    POSTGRES_USER=wealthpath
-    POSTGRES_PASSWORD=$${POSTGRES_PASSWORD}
-    POSTGRES_DB=wealthpath
-    JWT_SECRET=$${JWT_SECRET}
-    ALLOWED_ORIGINS=https://${var.domain}
-    ENVEOF
+POSTGRES_USER=wealthpath
+POSTGRES_PASSWORD=$${POSTGRES_PASSWORD}
+POSTGRES_DB=wealthpath
+JWT_SECRET=$${JWT_SECRET}
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost
+ENVEOF
     
-    # Configure Caddy
-    cat > /etc/caddy/Caddyfile << CADDYEOF
-    ${var.domain} {
-        reverse_proxy localhost:3000
-        encode gzip
-    }
-    CADDYEOF
+    # Configure Caddy (use :80 if no domain)
+    cat > /etc/caddy/Caddyfile << 'CADDYEOF'
+:80 {
+    reverse_proxy localhost:3000
+    encode gzip
+}
+CADDYEOF
     
     # Start services
     systemctl restart caddy
     cd /opt/wealthpath
-    docker compose -f docker-compose.prod.yaml up -d
+    docker compose -f docker-compose.prod.yaml up -d --build
     
     echo "WealthPath deployed successfully!" > /var/log/wealthpath-setup.log
   EOF

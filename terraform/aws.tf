@@ -21,7 +21,7 @@ variable "aws_region" {
 variable "aws_instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t3.micro"  # Free tier eligible
+  default     = "t3.small"  # 2GB RAM needed for Next.js build
 }
 
 # Get latest Ubuntu 22.04 AMI
