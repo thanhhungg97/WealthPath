@@ -1,12 +1,15 @@
-# Dependencies stage
-FROM node:20-alpine AS deps
+# Dependencies stage - use slim for SWC compatibility
+FROM node:20-slim AS deps
 WORKDIR /app
+
+# Install OpenSSL for Prisma (if needed)
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json* ./
 RUN npm ci
 
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -17,7 +20,7 @@ ENV NODE_ENV=production
 
 RUN npm run build
 
-# Runtime stage
+# Runtime stage - use alpine for smaller image
 FROM node:20-alpine AS runner
 WORKDIR /app
 
@@ -39,4 +42,3 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "server.js"]
-
