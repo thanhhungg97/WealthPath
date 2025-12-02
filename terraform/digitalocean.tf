@@ -1,7 +1,7 @@
 # DigitalOcean Provider Configuration
 
 provider "digitalocean" {
-  token = var.do_token
+  token = var.provider_choice == "digitalocean" ? var.do_token : "placeholder"
 }
 
 # SSH Key

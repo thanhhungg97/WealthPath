@@ -1,7 +1,7 @@
 # Hetzner Cloud Provider Configuration
 
 provider "hcloud" {
-  token = var.hcloud_token
+  token = var.provider_choice == "hetzner" ? var.hcloud_token : "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 }
 
 # SSH Key

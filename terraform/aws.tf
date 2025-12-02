@@ -5,6 +5,11 @@ provider "aws" {
   
   # Use credentials from ~/.aws/credentials or environment variables
   # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+  
+  # Skip validation if not using AWS
+  skip_credentials_validation = var.provider_choice != "aws"
+  skip_requesting_account_id  = var.provider_choice != "aws"
+  skip_metadata_api_check     = var.provider_choice != "aws"
 }
 
 variable "aws_region" {
