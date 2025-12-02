@@ -69,3 +69,4 @@ func (r *UserRepository) EmailExists(ctx context.Context, email string) (bool, e
 	return exists, err
 }
 
+

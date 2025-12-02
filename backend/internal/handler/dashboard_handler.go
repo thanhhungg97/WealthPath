@@ -51,3 +51,4 @@ func (h *DashboardHandler) GetMonthlyDashboard(w http.ResponseWriter, r *http.Re
 
 	respondJSON(w, http.StatusOK, data)
 }
+

@@ -64,3 +64,4 @@ echo "🔑 Your generated secrets (save these!):"
 echo "   JWT_SECRET=${JWT_SECRET}"
 echo "   POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
 
+

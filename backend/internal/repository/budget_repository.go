@@ -25,7 +25,7 @@ func (r *BudgetRepository) Create(ctx context.Context, budget *model.Budget) err
 		INSERT INTO budgets (id, user_id, category, amount, currency, period, start_date, end_date, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
 		RETURNING created_at, updated_at`
-	
+
 	budget.ID = uuid.New()
 	return r.db.QueryRowxContext(ctx, query,
 		budget.ID, budget.UserID, budget.Category, budget.Amount, budget.Currency,
@@ -89,4 +89,3 @@ func (r *BudgetRepository) GetActiveForUser(ctx context.Context, userID uuid.UUI
 	err := r.db.SelectContext(ctx, &budgets, query, userID)
 	return budgets, err
 }
-

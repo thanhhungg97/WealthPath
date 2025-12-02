@@ -16,3 +16,4 @@ echo "  minikube delete"
 echo "  or"
 echo "  kind delete cluster --name wealthpath"
 
+

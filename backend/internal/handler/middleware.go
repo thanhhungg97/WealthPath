@@ -45,3 +45,4 @@ func GetUserID(ctx context.Context) uuid.UUID {
 	}
 	return userID
 }
+

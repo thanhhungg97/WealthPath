@@ -228,3 +228,4 @@ Best for full control and cost-effectiveness at scale.
 | DigitalOcean | None | $12/month |
 | Vercel + Supabase | Generous | $20/month |
 
+

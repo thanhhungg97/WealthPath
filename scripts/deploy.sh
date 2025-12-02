@@ -18,3 +18,4 @@ echo ""
 echo "✅ Deployment complete!"
 docker compose -f docker-compose.prod.yaml ps
 
+

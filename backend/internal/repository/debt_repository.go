@@ -26,7 +26,7 @@ func (r *DebtRepository) Create(ctx context.Context, debt *model.Debt) error {
 		INSERT INTO debts (id, user_id, name, type, original_amount, current_balance, interest_rate, minimum_payment, currency, due_day, start_date, expected_payoff, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
 		RETURNING created_at, updated_at`
-	
+
 	debt.ID = uuid.New()
 	return r.db.QueryRowxContext(ctx, query,
 		debt.ID, debt.UserID, debt.Name, debt.Type, debt.OriginalAmount, debt.CurrentBalance,
@@ -93,7 +93,7 @@ func (r *DebtRepository) RecordPayment(ctx context.Context, payment *model.DebtP
 	paymentQuery := `
 		INSERT INTO debt_payments (id, debt_id, amount, principal, interest, date, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6, NOW())`
-	
+
 	payment.ID = uuid.New()
 	_, err = tx.ExecContext(ctx, paymentQuery,
 		payment.ID, payment.DebtID, payment.Amount, payment.Principal, payment.Interest, payment.Date,
@@ -125,4 +125,3 @@ func (r *DebtRepository) GetTotalDebt(ctx context.Context, userID uuid.UUID) (de
 	err := r.db.GetContext(ctx, &total, query, userID)
 	return total, err
 }
-

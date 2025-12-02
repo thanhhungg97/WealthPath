@@ -99,3 +99,4 @@ func (r *SavingsGoalRepository) GetTotalSavings(ctx context.Context, userID uuid
 	return total, err
 }
 
+
