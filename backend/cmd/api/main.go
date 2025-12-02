@@ -45,6 +45,7 @@ func main() {
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService)
+	oauthHandler := handler.NewOAuthHandler(userService)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
 	budgetHandler := handler.NewBudgetHandler(budgetService)
 	savingsHandler := handler.NewSavingsGoalHandler(savingsService)
@@ -81,6 +82,11 @@ func main() {
 	// Public routes
 	r.Post("/api/auth/register", authHandler.Register)
 	r.Post("/api/auth/login", authHandler.Login)
+	
+	// OAuth routes
+	r.Get("/api/auth/facebook", oauthHandler.FacebookLogin)
+	r.Get("/api/auth/facebook/callback", oauthHandler.FacebookCallback)
+	r.Post("/api/auth/facebook/token", oauthHandler.FacebookLoginToken)
 
 	// Protected routes
 	r.Group(func(r chi.Router) {

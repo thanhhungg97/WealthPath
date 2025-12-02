@@ -8,13 +8,16 @@ import (
 )
 
 type User struct {
-	ID           uuid.UUID `db:"id" json:"id"`
-	Email        string    `db:"email" json:"email"`
-	PasswordHash string    `db:"password_hash" json:"-"`
-	Name         string    `db:"name" json:"name"`
-	Currency     string    `db:"currency" json:"currency"`
-	CreatedAt    time.Time `db:"created_at" json:"createdAt"`
-	UpdatedAt    time.Time `db:"updated_at" json:"updatedAt"`
+	ID            uuid.UUID  `db:"id" json:"id"`
+	Email         string     `db:"email" json:"email"`
+	PasswordHash  *string    `db:"password_hash" json:"-"`
+	Name          string     `db:"name" json:"name"`
+	Currency      string     `db:"currency" json:"currency"`
+	OAuthProvider *string    `db:"oauth_provider" json:"oauthProvider,omitempty"`
+	OAuthID       *string    `db:"oauth_id" json:"-"`
+	AvatarURL     *string    `db:"avatar_url" json:"avatarUrl,omitempty"`
+	CreatedAt     time.Time  `db:"created_at" json:"createdAt"`
+	UpdatedAt     time.Time  `db:"updated_at" json:"updatedAt"`
 }
 
 type TransactionType string

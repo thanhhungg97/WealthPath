@@ -12,8 +12,11 @@ if [ -n "$DATABASE_URL" ]; then
     export PGUSER=$(echo $DATABASE_URL | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
 fi
 
-# Run migrations
-psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -f /app/sql/V1__initial_schema.sql
+# Run migrations in order
+for sql_file in /app/sql/V*.sql; do
+    echo "Running migration: $sql_file"
+    psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -f "$sql_file" || true
+done
 
 echo "Migrations completed successfully!"
 

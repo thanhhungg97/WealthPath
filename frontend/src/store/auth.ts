@@ -10,6 +10,7 @@ interface AuthState {
   register: (email: string, password: string, name: string) => Promise<void>
   logout: () => void
   setUser: (user: User | null) => void
+  setToken: (token: string) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -50,6 +51,12 @@ export const useAuthStore = create<AuthState>()(
 
       setUser: (user) => {
         set({ user, isAuthenticated: !!user })
+      },
+
+      setToken: (token) => {
+        api.setToken(token)
+        // Decode token to get basic user info (we'll fetch full user later)
+        set({ isAuthenticated: true })
       },
     }),
     {
