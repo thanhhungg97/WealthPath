@@ -36,7 +36,11 @@ services:
   flyway:
     build: ./migrations
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-wealthpath}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-wealthpath}?sslmode=disable
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-wealthpath}
+      FLYWAY_USER: ${POSTGRES_USER:-wealthpath}
+      FLYWAY_PASSWORD: ${POSTGRES_PASSWORD}
+      FLYWAY_CONNECT_RETRIES: 10
+      FLYWAY_BASELINE_ON_MIGRATE: "true"
     depends_on:
       postgres:
         condition: service_healthy

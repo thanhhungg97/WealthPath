@@ -1,10 +1,9 @@
-FROM postgres:16-alpine
+FROM flyway/flyway:10-alpine
 
-WORKDIR /app
+# Copy SQL migrations
+COPY sql/ /flyway/sql/
 
-COPY sql/ /app/sql/
-COPY migrate.sh /app/migrate.sh
+# Flyway will use environment variables:
+# FLYWAY_URL, FLYWAY_USER, FLYWAY_PASSWORD
 
-RUN chmod +x /app/migrate.sh
-
-CMD ["/app/migrate.sh"]
+ENTRYPOINT ["flyway", "migrate"]

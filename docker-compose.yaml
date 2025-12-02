@@ -32,6 +32,8 @@ services:
       FLYWAY_URL: jdbc:postgresql://postgres:5432/wealthpath
       FLYWAY_USER: wealthpath
       FLYWAY_PASSWORD: wealthpath123
+      FLYWAY_CONNECT_RETRIES: 10
+      FLYWAY_BASELINE_ON_MIGRATE: "true"
     depends_on:
       postgres:
         condition: service_healthy
