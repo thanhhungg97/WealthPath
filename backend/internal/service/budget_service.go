@@ -94,7 +94,7 @@ func (s *BudgetService) ListWithSpent(ctx context.Context, userID uuid.UUID) ([]
 
 	for i, budget := range budgets {
 		startDate, endDate := getPeriodDates(budget.Period, now)
-		
+
 		spent, err := s.transactionRepo.GetSpentByCategory(ctx, userID, budget.Category, startDate, endDate)
 		if err != nil {
 			return nil, err
@@ -160,5 +160,3 @@ func getPeriodDates(period string, now time.Time) (start, end time.Time) {
 	}
 	return start, end
 }
-
-

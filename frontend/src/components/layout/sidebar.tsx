@@ -1,21 +1,22 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { useAuthStore } from "@/store/auth"
 import {
-  LayoutDashboard,
   ArrowUpDown,
-  PiggyBank,
-  Target,
-  CreditCard,
   Calculator,
-  Settings,
+  CreditCard,
+  LayoutDashboard,
   LogOut,
+  PiggyBank,
+  Settings,
+  Target,
   TrendingUp,
 } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { cn } from "@/lib/utils"
+import { useAuthStore } from "@/store/auth"
+import { usePathname } from "next/navigation"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },

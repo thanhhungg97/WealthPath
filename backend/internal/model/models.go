@@ -83,20 +83,20 @@ const (
 )
 
 type Debt struct {
-	ID              uuid.UUID       `db:"id" json:"id"`
-	UserID          uuid.UUID       `db:"user_id" json:"userId"`
-	Name            string          `db:"name" json:"name"`
-	Type            DebtType        `db:"type" json:"type"`
-	OriginalAmount  decimal.Decimal `db:"original_amount" json:"originalAmount"`
-	CurrentBalance  decimal.Decimal `db:"current_balance" json:"currentBalance"`
-	InterestRate    decimal.Decimal `db:"interest_rate" json:"interestRate"` // APR as percentage
-	MinimumPayment  decimal.Decimal `db:"minimum_payment" json:"minimumPayment"`
-	Currency        string          `db:"currency" json:"currency"`
-	DueDay          int             `db:"due_day" json:"dueDay"` // Day of month
-	StartDate       time.Time       `db:"start_date" json:"startDate"`
-	ExpectedPayoff  *time.Time      `db:"expected_payoff" json:"expectedPayoff,omitempty"`
-	CreatedAt       time.Time       `db:"created_at" json:"createdAt"`
-	UpdatedAt       time.Time       `db:"updated_at" json:"updatedAt"`
+	ID             uuid.UUID       `db:"id" json:"id"`
+	UserID         uuid.UUID       `db:"user_id" json:"userId"`
+	Name           string          `db:"name" json:"name"`
+	Type           DebtType        `db:"type" json:"type"`
+	OriginalAmount decimal.Decimal `db:"original_amount" json:"originalAmount"`
+	CurrentBalance decimal.Decimal `db:"current_balance" json:"currentBalance"`
+	InterestRate   decimal.Decimal `db:"interest_rate" json:"interestRate"` // APR as percentage
+	MinimumPayment decimal.Decimal `db:"minimum_payment" json:"minimumPayment"`
+	Currency       string          `db:"currency" json:"currency"`
+	DueDay         int             `db:"due_day" json:"dueDay"` // Day of month
+	StartDate      time.Time       `db:"start_date" json:"startDate"`
+	ExpectedPayoff *time.Time      `db:"expected_payoff" json:"expectedPayoff,omitempty"`
+	CreatedAt      time.Time       `db:"created_at" json:"createdAt"`
+	UpdatedAt      time.Time       `db:"updated_at" json:"updatedAt"`
 }
 
 type DebtPayment struct {
@@ -121,25 +121,25 @@ type PayoffPlan struct {
 }
 
 type AmortizationRow struct {
-	Month          int             `json:"month"`
-	Payment        decimal.Decimal `json:"payment"`
-	Principal      decimal.Decimal `json:"principal"`
-	Interest       decimal.Decimal `json:"interest"`
+	Month            int             `json:"month"`
+	Payment          decimal.Decimal `json:"payment"`
+	Principal        decimal.Decimal `json:"principal"`
+	Interest         decimal.Decimal `json:"interest"`
 	RemainingBalance decimal.Decimal `json:"remainingBalance"`
 }
 
 // Dashboard aggregates
 type DashboardData struct {
-	TotalIncome      decimal.Decimal   `json:"totalIncome"`
-	TotalExpenses    decimal.Decimal   `json:"totalExpenses"`
-	NetCashFlow      decimal.Decimal   `json:"netCashFlow"`
-	TotalSavings     decimal.Decimal   `json:"totalSavings"`
-	TotalDebt        decimal.Decimal   `json:"totalDebt"`
-	BudgetSummary    []BudgetWithSpent `json:"budgetSummary"`
-	SavingsGoals     []SavingsGoal     `json:"savingsGoals"`
-	RecentTransactions []Transaction   `json:"recentTransactions"`
+	TotalIncome        decimal.Decimal            `json:"totalIncome"`
+	TotalExpenses      decimal.Decimal            `json:"totalExpenses"`
+	NetCashFlow        decimal.Decimal            `json:"netCashFlow"`
+	TotalSavings       decimal.Decimal            `json:"totalSavings"`
+	TotalDebt          decimal.Decimal            `json:"totalDebt"`
+	BudgetSummary      []BudgetWithSpent          `json:"budgetSummary"`
+	SavingsGoals       []SavingsGoal              `json:"savingsGoals"`
+	RecentTransactions []Transaction              `json:"recentTransactions"`
 	ExpensesByCategory map[string]decimal.Decimal `json:"expensesByCategory"`
-	IncomeVsExpenses []MonthlyComparison `json:"incomeVsExpenses"`
+	IncomeVsExpenses   []MonthlyComparison        `json:"incomeVsExpenses"`
 }
 
 type MonthlyComparison struct {
@@ -177,5 +177,3 @@ var IncomeCategories = []string{
 	"Refunds",
 	"Other",
 }
-
-
