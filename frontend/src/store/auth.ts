@@ -1,6 +1,7 @@
+import { User, api } from "@/lib/api"
+
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import { api, User } from "@/lib/api"
 
 interface AuthState {
   user: User | null
