@@ -42,6 +42,7 @@ func main() {
 	savingsService := service.NewSavingsGoalService(savingsRepo)
 	debtService := service.NewDebtService(debtRepo)
 	dashboardService := service.NewDashboardService(transactionRepo, budgetRepo, savingsRepo, debtRepo)
+	aiService := service.NewAIService(transactionService, budgetService, savingsService)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService)
@@ -51,6 +52,7 @@ func main() {
 	savingsHandler := handler.NewSavingsGoalHandler(savingsService)
 	debtHandler := handler.NewDebtHandler(debtService)
 	dashboardHandler := handler.NewDashboardHandler(dashboardService)
+	aiHandler := handler.NewAIHandler(aiService)
 
 	r := chi.NewRouter()
 
@@ -130,6 +132,9 @@ func main() {
 		r.Post("/api/debts/{id}/payment", debtHandler.MakePayment)
 		r.Get("/api/debts/{id}/payoff-plan", debtHandler.GetPayoffPlan)
 		r.Get("/api/debts/calculator", debtHandler.InterestCalculator)
+
+		// AI Chat
+		r.Post("/api/chat", aiHandler.Chat)
 	})
 
 	port := os.Getenv("PORT")

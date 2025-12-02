@@ -201,9 +201,26 @@ class ApiClient {
       params: params as unknown as Record<string, string>,
     })
   }
+
+  // AI Chat
+  async chat(message: string) {
+    return this.request<ChatResponse>("/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    })
+  }
 }
 
 export const api = new ApiClient()
+
+// Chat Types
+export interface ChatResponse {
+  message: string
+  action?: {
+    type: "transaction" | "budget" | "savings_goal"
+    data: Transaction | Budget | SavingsGoal
+  }
+}
 
 // Types
 export interface User {

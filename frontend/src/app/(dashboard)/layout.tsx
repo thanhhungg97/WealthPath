@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuthStore } from "@/store/auth"
 import { Sidebar } from "@/components/layout/sidebar"
+import { AIChat } from "@/components/chat/ai-chat"
 
 export default function DashboardLayout({
   children,
@@ -29,6 +30,7 @@ export default function DashboardLayout({
       <main className="pl-64">
         <div className="p-8">{children}</div>
       </main>
+      <AIChat />
     </div>
   )
 }

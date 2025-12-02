@@ -55,6 +55,7 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-wealthpath}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-wealthpath}?sslmode=disable
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       PORT: "8080"
     depends_on:
       flyway:
