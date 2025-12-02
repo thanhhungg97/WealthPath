@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,6 +11,36 @@ import (
 	"github.com/wealthpath/backend/internal/model"
 	"github.com/wealthpath/backend/internal/repository"
 )
+
+// DateString handles both "2006-01-02" and RFC3339 date formats
+type DateString time.Time
+
+func (d *DateString) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), "\"")
+	if s == "" || s == "null" {
+		return nil
+	}
+	
+	// Try RFC3339 first
+	t, err := time.Parse(time.RFC3339, s)
+	if err == nil {
+		*d = DateString(t)
+		return nil
+	}
+	
+	// Try date only format
+	t, err = time.Parse("2006-01-02", s)
+	if err == nil {
+		*d = DateString(t)
+		return nil
+	}
+	
+	return err
+}
+
+func (d DateString) Time() time.Time {
+	return time.Time(d)
+}
 
 type TransactionService struct {
 	repo *repository.TransactionRepository
@@ -25,7 +56,7 @@ type CreateTransactionInput struct {
 	Currency    string                `json:"currency"`
 	Category    string                `json:"category"`
 	Description string                `json:"description"`
-	Date        time.Time             `json:"date"`
+	Date        DateString            `json:"date"`
 }
 
 type UpdateTransactionInput struct {
@@ -34,7 +65,7 @@ type UpdateTransactionInput struct {
 	Currency    string                `json:"currency"`
 	Category    string                `json:"category"`
 	Description string                `json:"description"`
-	Date        time.Time             `json:"date"`
+	Date        DateString            `json:"date"`
 }
 
 type ListTransactionsInput struct {
@@ -54,7 +85,7 @@ func (s *TransactionService) Create(ctx context.Context, userID uuid.UUID, input
 		Currency:    input.Currency,
 		Category:    input.Category,
 		Description: input.Description,
-		Date:        input.Date,
+		Date:        input.Date.Time(),
 	}
 
 	if tx.Currency == "" {
@@ -107,7 +138,7 @@ func (s *TransactionService) Update(ctx context.Context, id uuid.UUID, userID uu
 	tx.Currency = input.Currency
 	tx.Category = input.Category
 	tx.Description = input.Description
-	tx.Date = input.Date
+	tx.Date = input.Date.Time()
 
 	if err := s.repo.Update(ctx, tx); err != nil {
 		return nil, err

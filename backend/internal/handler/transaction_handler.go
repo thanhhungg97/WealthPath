@@ -24,13 +24,27 @@ func (h *TransactionHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	var input service.CreateTransactionInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid request body")
+		respondError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
+		return
+	}
+
+	// Validate required fields
+	if input.Type == "" {
+		respondError(w, http.StatusBadRequest, "type is required (income or expense)")
+		return
+	}
+	if input.Amount.IsZero() {
+		respondError(w, http.StatusBadRequest, "amount is required and must be greater than 0")
+		return
+	}
+	if input.Category == "" {
+		respondError(w, http.StatusBadRequest, "category is required")
 		return
 	}
 
 	tx, err := h.service.Create(r.Context(), userID, input)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, "failed to create transaction")
+		respondError(w, http.StatusInternalServerError, "failed to create transaction: "+err.Error())
 		return
 	}
 
@@ -102,19 +116,19 @@ func (h *TransactionHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid id")
+		respondError(w, http.StatusBadRequest, "invalid id: "+err.Error())
 		return
 	}
 
 	var input service.UpdateTransactionInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid request body")
+		respondError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
 		return
 	}
 
 	tx, err := h.service.Update(r.Context(), id, userID, input)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, "failed to update transaction")
+		respondError(w, http.StatusInternalServerError, "failed to update transaction: "+err.Error())
 		return
 	}
 
