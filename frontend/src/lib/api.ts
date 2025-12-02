@@ -75,6 +75,13 @@ class ApiClient {
     return this.request<User>("/api/auth/me")
   }
 
+  async updateSettings(data: UpdateSettingsInput) {
+    return this.request<User>("/api/auth/settings", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  }
+
   // Dashboard
   async getDashboard() {
     return this.request<DashboardData>("/api/dashboard")
@@ -230,6 +237,24 @@ export interface User {
   currency: string
   createdAt: string
 }
+
+export interface UpdateSettingsInput {
+  name?: string
+  currency?: string
+}
+
+export const SUPPORTED_CURRENCIES = [
+  { code: "USD", name: "US Dollar", symbol: "$" },
+  { code: "EUR", name: "Euro", symbol: "€" },
+  { code: "GBP", name: "British Pound", symbol: "£" },
+  { code: "VND", name: "Vietnamese Dong", symbol: "₫" },
+  { code: "JPY", name: "Japanese Yen", symbol: "¥" },
+  { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
+  { code: "KRW", name: "Korean Won", symbol: "₩" },
+  { code: "SGD", name: "Singapore Dollar", symbol: "S$" },
+  { code: "AUD", name: "Australian Dollar", symbol: "A$" },
+  { code: "CAD", name: "Canadian Dollar", symbol: "C$" },
+] as const
 
 export interface Transaction {
   id: string

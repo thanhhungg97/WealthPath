@@ -111,6 +111,46 @@ func (s *UserService) GetByID(ctx context.Context, id uuid.UUID) (*model.User, e
 	return s.repo.GetByID(ctx, id)
 }
 
+// Supported currencies
+var SupportedCurrencies = []string{"USD", "EUR", "GBP", "VND", "JPY", "CNY", "KRW", "SGD", "AUD", "CAD"}
+
+type UpdateSettingsInput struct {
+	Name     *string `json:"name"`
+	Currency *string `json:"currency"`
+}
+
+func (s *UserService) UpdateSettings(ctx context.Context, userID uuid.UUID, input UpdateSettingsInput) (*model.User, error) {
+	user, err := s.repo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if input.Name != nil && *input.Name != "" {
+		user.Name = *input.Name
+	}
+
+	if input.Currency != nil && *input.Currency != "" {
+		// Validate currency
+		valid := false
+		for _, c := range SupportedCurrencies {
+			if c == *input.Currency {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			return nil, errors.New("unsupported currency")
+		}
+		user.Currency = *input.Currency
+	}
+
+	if err := s.repo.Update(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
 func generateToken(userID uuid.UUID) (string, error) {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {

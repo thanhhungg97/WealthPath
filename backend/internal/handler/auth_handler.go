@@ -77,3 +77,25 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 
 	respondJSON(w, http.StatusOK, user)
 }
+
+func (h *AuthHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
+	userID := GetUserID(r.Context())
+	if userID == uuid.Nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	var input service.UpdateSettingsInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	user, err := h.userService.UpdateSettings(r.Context(), userID, input)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to update settings: "+err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusOK, user)
+}

@@ -96,6 +96,7 @@ func main() {
 
 		// Current user
 		r.Get("/api/auth/me", authHandler.Me)
+		r.Put("/api/auth/settings", authHandler.UpdateSettings)
 
 		// Dashboard
 		r.Get("/api/dashboard", dashboardHandler.GetDashboard)
