@@ -88,19 +88,8 @@ resource "aws_instance" "wealthpath" {
   key_name               = aws_key_pair.wealthpath.key_name
   vpc_security_group_ids = [aws_security_group.wealthpath.id]
 
-  user_data = <<-EOF
-    #!/bin/bash
-    # WealthPath EC2 Bootstrap - Minimal setup for Ansible
-    # Full deployment handled by: cd ansible && ansible-playbook playbook.yml
-    
-    set -ex
-    
-    # Install Python for Ansible
-    apt-get update -qq
-    apt-get install -y -qq python3 python3-pip
-    
-    echo "Server ready for Ansible provisioning"
-  EOF
+  # No user_data needed - Ansible handles all provisioning
+  # Ubuntu 22.04 has Python3 pre-installed for Ansible
 
   root_block_device {
     volume_size = 20
