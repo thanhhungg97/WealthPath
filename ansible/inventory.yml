@@ -36,6 +36,10 @@ all:
     # AI (from GitHub Secrets via env vars)
     openai_api_key: "{{ lookup('env', 'OPENAI_API_KEY') | default('', true) }}"
     
+    # SEO & Analytics
+    ga_measurement_id: "{{ lookup('env', 'GA_MEASUREMENT_ID') | default('', true) }}"
+    google_site_verification: "{{ lookup('env', 'GOOGLE_SITE_VERIFICATION') | default('hmaoUIUVvl1QGRo_Oj_hRbSWzAjI5Por_V4QAfEC9ZM', true) }}"
+    
     # Docker compose file
     compose_file: docker-compose.deploy.yaml
 
