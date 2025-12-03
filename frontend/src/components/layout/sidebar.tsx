@@ -12,14 +12,14 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react"
+import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from "@/components/ui/button"
+import { LanguageSwitcher } from "@/components/language-switcher"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/store/auth"
 import { usePathname } from "next/navigation"
-import { useTranslations, useLocale } from 'next-intl'
-import { LanguageSwitcher } from "@/components/language-switcher"
 
 export function Sidebar() {
   const pathname = usePathname()
