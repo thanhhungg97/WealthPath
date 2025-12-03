@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
+import { useTranslations } from "next-intl"
 import { Plus, Trash2, Loader2, PiggyBank, AlertTriangle, CheckCircle } from "lucide-react"
 
 const CATEGORIES = [
@@ -45,6 +46,7 @@ export default function BudgetsPage() {
   const [isOpen, setIsOpen] = useState(false)
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const t = useTranslations()
 
   const { data: budgets, isLoading } = useQuery<BudgetWithSpent[]>({
     queryKey: ["budgets"],
@@ -56,7 +58,7 @@ export default function BudgetsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["budgets"] })
       setIsOpen(false)
-      toast({ title: "Budget created" })
+      toast({ title: t('budgets.budgetCreated') })
     },
     onError: (error) => {
       toast({
@@ -71,7 +73,7 @@ export default function BudgetsPage() {
     mutationFn: (id: string) => api.deleteBudget(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["budgets"] })
-      toast({ title: "Budget deleted" })
+      toast({ title: t('budgets.budgetDeleted') })
     },
   })
 
@@ -94,26 +96,26 @@ export default function BudgetsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-display font-bold">Budgets</h1>
-          <p className="text-muted-foreground mt-1">Manage your spending limits</p>
+          <h1 className="text-3xl font-display font-bold">{t('budgets.title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('budgets.subtitle')}</p>
         </div>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              Create Budget
+              {t('budgets.createBudget')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create Budget</DialogTitle>
+              <DialogTitle>{t('budgets.createBudget')}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">{t('transactions.category')}</Label>
                 <Select name="category" required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder={t('common.selectCategory')} />
                   </SelectTrigger>
                   <SelectContent>
                     {CATEGORIES.map((cat) => (
@@ -126,7 +128,7 @@ export default function BudgetsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="amount">Monthly Limit</Label>
+                <Label htmlFor="amount">{t('budgets.monthlyLimit')}</Label>
                 <Input
                   id="amount"
                   name="amount"
@@ -138,15 +140,15 @@ export default function BudgetsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="period">Period</Label>
+                <Label htmlFor="period">{t('budgets.period')}</Label>
                 <Select name="period" defaultValue="monthly">
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
+                    <SelectItem value="weekly">{t('budgets.weekly')}</SelectItem>
+                    <SelectItem value="monthly">{t('budgets.monthly')}</SelectItem>
+                    <SelectItem value="yearly">{t('budgets.yearly')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -155,10 +157,10 @@ export default function BudgetsPage() {
                 {createMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    Creating...
+                    {t('common.creating')}
                   </>
                 ) : (
-                  "Create Budget"
+                  t('budgets.createBudget')
                 )}
               </Button>
             </form>
@@ -175,7 +177,7 @@ export default function BudgetsPage() {
                 <PiggyBank className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Budget</p>
+                <p className="text-sm text-muted-foreground">{t('budgets.totalBudget')}</p>
                 <p className="text-2xl font-bold">{formatCurrency(totalBudget)}</p>
               </div>
             </div>
@@ -189,7 +191,7 @@ export default function BudgetsPage() {
                 <CheckCircle className="w-6 h-6 text-accent" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Spent</p>
+                <p className="text-sm text-muted-foreground">{t('budgets.totalSpent')}</p>
                 <p className="text-2xl font-bold">{formatCurrency(totalSpent)}</p>
               </div>
             </div>
@@ -203,8 +205,8 @@ export default function BudgetsPage() {
                 <AlertTriangle className={`w-6 h-6 ${overBudgetCount > 0 ? "text-warning" : "text-success"}`} />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Over Budget</p>
-                <p className="text-2xl font-bold">{overBudgetCount} categories</p>
+                <p className="text-sm text-muted-foreground">{t('budgets.overBudget')}</p>
+                <p className="text-2xl font-bold">{overBudgetCount} {t('common.categories')}</p>
               </div>
             </div>
           </CardContent>
@@ -257,7 +259,7 @@ export default function BudgetsPage() {
                       >
                         {remaining >= 0 ? formatCurrency(remaining) : `-${formatCurrency(Math.abs(remaining))}`}
                       </p>
-                      <p className="text-sm text-muted-foreground">remaining</p>
+                      <p className="text-sm text-muted-foreground">{t('budgets.remaining')}</p>
                     </div>
                   </div>
 
@@ -269,12 +271,12 @@ export default function BudgetsPage() {
                     />
                     <div className="flex justify-between text-sm">
                       <span className={isOverBudget ? "text-destructive font-medium" : "text-muted-foreground"}>
-                        {formatPercent(budget.percentage)} used
+                        {formatPercent(budget.percentage)} {t('common.used')}
                       </span>
                       {isOverBudget && (
                         <span className="text-destructive font-medium flex items-center gap-1">
                           <AlertTriangle className="w-4 h-4" />
-                          Over budget!
+                          {t('common.overBudget')}
                         </span>
                       )}
                     </div>
@@ -288,9 +290,9 @@ export default function BudgetsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <PiggyBank className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No budgets set up yet</p>
+            <p className="text-muted-foreground">{t('budgets.noBudgetsYet')}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Create a budget to start tracking your spending
+              {t('budgets.createBudgetToStart')}
             </p>
           </CardContent>
         </Card>

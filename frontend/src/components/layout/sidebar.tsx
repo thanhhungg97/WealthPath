@@ -34,7 +34,7 @@ export function Sidebar() {
     { name: t('budgets.title'), href: `/${locale}/budgets`, icon: PiggyBank, key: 'budgets' },
     { name: t('savings.title'), href: `/${locale}/savings`, icon: Target, key: 'savings' },
     { name: t('debts.title'), href: `/${locale}/debts`, icon: CreditCard, key: 'debts' },
-    { name: "Calculator", href: `/${locale}/calculator`, icon: Calculator, key: 'calculator' },
+    { name: t('calculator.title'), href: `/${locale}/calculator`, icon: Calculator, key: 'calculator' },
   ]
 
   return (

@@ -8,7 +8,18 @@
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
-    "close": "Close"
+    "close": "Close",
+    "all": "All",
+    "creating": "Creating...",
+    "adding": "Adding...",
+    "selectCategory": "Select category",
+    "optional": "optional",
+    "used": "used",
+    "overBudget": "Over budget!",
+    "categories": "categories"
+  },
+  "calculator": {
+    "title": "Calculator"
   },
   "auth": {
     "login": "Login",
@@ -41,12 +52,18 @@
   },
   "transactions": {
     "title": "Transactions",
+    "subtitle": "Track your income and expenses",
     "addTransaction": "Add Transaction",
+    "transactionAdded": "Transaction added",
+    "transactionDeleted": "Transaction deleted",
     "income": "Income",
     "expense": "Expense",
+    "expenses": "Expenses",
     "amount": "Amount",
     "category": "Category",
     "description": "Description",
+    "descriptionOptional": "Description (optional)",
+    "addNote": "Add a note...",
     "date": "Date",
     "noTransactions": "No transactions found",
     "deleteTransaction": "Delete Transaction",
@@ -106,16 +123,26 @@
   },
   "budgets": {
     "title": "Budgets",
+    "subtitle": "Manage your spending limits",
     "addBudget": "Add Budget",
+    "createBudget": "Create Budget",
+    "budgetCreated": "Budget created",
+    "budgetDeleted": "Budget deleted",
     "period": "Period",
     "weekly": "Weekly",
     "monthly": "Monthly",
     "yearly": "Yearly",
+    "monthlyLimit": "Monthly Limit",
     "startDate": "Start Date",
     "endDate": "End Date",
     "spent": "Spent",
-    "remaining": "Remaining",
-    "noBudgets": "No budgets found"
+    "remaining": "remaining",
+    "totalBudget": "Total Budget",
+    "totalSpent": "Total Spent",
+    "overBudget": "Over Budget",
+    "noBudgets": "No budgets found",
+    "noBudgetsYet": "No budgets set up yet",
+    "createBudgetToStart": "Create a budget to start tracking your spending"
   },
   "savings": {
     "title": "Savings Goals",

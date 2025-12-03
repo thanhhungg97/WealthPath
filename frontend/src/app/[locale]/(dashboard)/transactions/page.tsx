@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/use-toast"
+import { useTranslations } from "next-intl"
 import {
   Plus,
   ArrowUpRight,
@@ -66,6 +67,7 @@ export default function TransactionsPage() {
   const [type, setType] = useState<"income" | "expense">("expense")
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const t = useTranslations()
 
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
     queryKey: ["transactions"],
@@ -78,7 +80,7 @@ export default function TransactionsPage() {
       queryClient.invalidateQueries({ queryKey: ["transactions"] })
       queryClient.invalidateQueries({ queryKey: ["dashboard"] })
       setIsOpen(false)
-      toast({ title: "Transaction added", variant: "default" })
+      toast({ title: t('transactions.transactionAdded'), variant: "default" })
     },
     onError: (error) => {
       toast({
@@ -94,7 +96,7 @@ export default function TransactionsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] })
       queryClient.invalidateQueries({ queryKey: ["dashboard"] })
-      toast({ title: "Transaction deleted" })
+      toast({ title: t('transactions.transactionDeleted') })
     },
   })
 
@@ -117,19 +119,19 @@ export default function TransactionsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-display font-bold">Transactions</h1>
-          <p className="text-muted-foreground mt-1">Track your income and expenses</p>
+          <h1 className="text-3xl font-display font-bold">{t('transactions.title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('transactions.subtitle')}</p>
         </div>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              Add Transaction
+              {t('transactions.addTransaction')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Transaction</DialogTitle>
+              <DialogTitle>{t('transactions.addTransaction')}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="flex gap-2">
@@ -140,7 +142,7 @@ export default function TransactionsPage() {
                   onClick={() => setType("expense")}
                 >
                   <ArrowDownRight className="w-4 h-4 mr-2" />
-                  Expense
+                  {t('transactions.expense')}
                 </Button>
                 <Button
                   type="button"
@@ -149,12 +151,12 @@ export default function TransactionsPage() {
                   onClick={() => setType("income")}
                 >
                   <ArrowUpRight className="w-4 h-4 mr-2" />
-                  Income
+                  {t('transactions.income')}
                 </Button>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount</Label>
+                <Label htmlFor="amount">{t('transactions.amount')}</Label>
                 <Input
                   id="amount"
                   name="amount"
@@ -166,10 +168,10 @@ export default function TransactionsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">{t('transactions.category')}</Label>
                 <Select name="category" required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder={t('common.selectCategory')} />
                   </SelectTrigger>
                   <SelectContent>
                     {(type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES).map((cat) => (
@@ -182,12 +184,12 @@ export default function TransactionsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description (optional)</Label>
-                <Input id="description" name="description" placeholder="Add a note..." />
+                <Label htmlFor="description">{t('transactions.descriptionOptional')}</Label>
+                <Input id="description" name="description" placeholder={t('transactions.addNote')} />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="date">Date</Label>
+                <Label htmlFor="date">{t('transactions.date')}</Label>
                 <Input
                   id="date"
                   name="date"
@@ -201,10 +203,10 @@ export default function TransactionsPage() {
                 {createMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    Adding...
+                    {t('common.adding')}
                   </>
                 ) : (
-                  "Add Transaction"
+                  t('transactions.addTransaction')
                 )}
               </Button>
             </form>
@@ -214,9 +216,9 @@ export default function TransactionsPage() {
 
       <Tabs defaultValue="all">
         <TabsList>
-          <TabsTrigger value="all">All ({transactions?.length || 0})</TabsTrigger>
-          <TabsTrigger value="income">Income ({incomeTransactions.length})</TabsTrigger>
-          <TabsTrigger value="expenses">Expenses ({expenseTransactions.length})</TabsTrigger>
+          <TabsTrigger value="all">{t('common.all')} ({transactions?.length || 0})</TabsTrigger>
+          <TabsTrigger value="income">{t('transactions.income')} ({incomeTransactions.length})</TabsTrigger>
+          <TabsTrigger value="expenses">{t('transactions.expenses')} ({expenseTransactions.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="mt-6">
@@ -224,6 +226,7 @@ export default function TransactionsPage() {
             transactions={transactions || []}
             isLoading={isLoading}
             onDelete={(id) => deleteMutation.mutate(id)}
+            t={t}
           />
         </TabsContent>
 
@@ -232,6 +235,7 @@ export default function TransactionsPage() {
             transactions={incomeTransactions}
             isLoading={isLoading}
             onDelete={(id) => deleteMutation.mutate(id)}
+            t={t}
           />
         </TabsContent>
 
@@ -240,6 +244,7 @@ export default function TransactionsPage() {
             transactions={expenseTransactions}
             isLoading={isLoading}
             onDelete={(id) => deleteMutation.mutate(id)}
+            t={t}
           />
         </TabsContent>
       </Tabs>
@@ -251,10 +256,12 @@ function TransactionList({
   transactions,
   isLoading,
   onDelete,
+  t,
 }: {
   transactions: Transaction[]
   isLoading: boolean
   onDelete: (id: string) => void
+  t: ReturnType<typeof useTranslations>
 }) {
   if (isLoading) {
     return (
@@ -270,7 +277,7 @@ function TransactionList({
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">No transactions found</p>
+          <p className="text-muted-foreground">{t('transactions.noTransactions')}</p>
         </CardContent>
       </Card>
     )

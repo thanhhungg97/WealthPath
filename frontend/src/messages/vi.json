@@ -8,7 +8,18 @@
     "loading": "Đang tải...",
     "error": "Lỗi",
     "success": "Thành công",
-    "close": "Đóng"
+    "close": "Đóng",
+    "all": "Tất cả",
+    "creating": "Đang tạo...",
+    "adding": "Đang thêm...",
+    "selectCategory": "Chọn danh mục",
+    "optional": "tùy chọn",
+    "used": "đã dùng",
+    "overBudget": "Vượt ngân sách!",
+    "categories": "danh mục"
+  },
+  "calculator": {
+    "title": "Máy tính"
   },
   "auth": {
     "login": "Đăng nhập",
@@ -41,12 +52,18 @@
   },
   "transactions": {
     "title": "Giao dịch",
+    "subtitle": "Theo dõi thu nhập và chi tiêu của bạn",
     "addTransaction": "Thêm giao dịch",
+    "transactionAdded": "Đã thêm giao dịch",
+    "transactionDeleted": "Đã xóa giao dịch",
     "income": "Thu nhập",
     "expense": "Chi tiêu",
+    "expenses": "Chi tiêu",
     "amount": "Số tiền",
     "category": "Danh mục",
     "description": "Mô tả",
+    "descriptionOptional": "Mô tả (tùy chọn)",
+    "addNote": "Thêm ghi chú...",
     "date": "Ngày",
     "noTransactions": "Không tìm thấy giao dịch",
     "deleteTransaction": "Xóa giao dịch",
@@ -106,16 +123,26 @@
   },
   "budgets": {
     "title": "Ngân sách",
+    "subtitle": "Quản lý hạn mức chi tiêu của bạn",
     "addBudget": "Thêm ngân sách",
+    "createBudget": "Tạo ngân sách",
+    "budgetCreated": "Đã tạo ngân sách",
+    "budgetDeleted": "Đã xóa ngân sách",
     "period": "Chu kỳ",
     "weekly": "Hàng tuần",
     "monthly": "Hàng tháng",
     "yearly": "Hàng năm",
+    "monthlyLimit": "Hạn mức hàng tháng",
     "startDate": "Ngày bắt đầu",
     "endDate": "Ngày kết thúc",
     "spent": "Đã chi",
-    "remaining": "Còn lại",
-    "noBudgets": "Không tìm thấy ngân sách"
+    "remaining": "còn lại",
+    "totalBudget": "Tổng ngân sách",
+    "totalSpent": "Tổng đã chi",
+    "overBudget": "Vượt ngân sách",
+    "noBudgets": "Không tìm thấy ngân sách",
+    "noBudgetsYet": "Chưa thiết lập ngân sách",
+    "createBudgetToStart": "Tạo ngân sách để bắt đầu theo dõi chi tiêu"
   },
   "savings": {
     "title": "Mục tiêu tiết kiệm",
