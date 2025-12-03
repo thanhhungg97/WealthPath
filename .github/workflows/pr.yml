@@ -41,8 +41,8 @@ jobs:
         run: go test -v -race -coverprofile=coverage.out ./...
       
       - name: Upload coverage
-        if: ${{ secrets.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v4
+        continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: backend/coverage.out
