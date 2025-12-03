@@ -18,11 +18,13 @@
       local_action: stat path=secrets.yml
       register: secrets_file
       become: no
+      failed_when: false
 
-    - name: Include secrets if available
+    - name: Include secrets if available (skip if encrypted without vault password)
       include_vars: secrets.yml
       when: secrets_file.stat.exists
       no_log: true
+      ignore_errors: yes
 
   tasks:
     # System setup - install base packages

@@ -44,17 +44,27 @@
   changed_when: false
   failed_when: false
 
-- name: Create PostgreSQL user
+- name: Create PostgreSQL user (without password if not set)
+  become_user: postgres
+  postgresql_user:
+    name: "{{ postgres_user }}"
+    password: "{{ postgres_password | default('temp_password_change_me') }}"
+    priv: "{{ postgres_db }}:ALL"
+    state: present
+  when: not user_exists.rc == 0
+  no_log: "{{ postgres_password is not defined }}"
+
+- name: Update PostgreSQL user password (if password is set)
   become_user: postgres
   postgresql_user:
     name: "{{ postgres_user }}"
     password: "{{ postgres_password }}"
-    priv: "{{ postgres_db }}:ALL"
     state: present
-  when: not user_exists.rc == 0
+  when: postgres_password is defined
+  no_log: true
 
-- name: Get PostgreSQL version
-  shell: psql --version | awk '{print $3}' | cut -d. -f1,2
+- name: Get PostgreSQL major version
+  shell: psql --version | awk '{print $3}' | cut -d. -f1
   register: postgres_version
   changed_when: false
 

@@ -16,15 +16,12 @@
     docker_compose_version: "2.24.0"
   
   pre_tasks:
+    # Secrets not needed for migration, skip if encrypted
     - name: Check if secrets.yml exists
       local_action: stat path=secrets.yml
       register: secrets_file
       become: no
-
-    - name: Include secrets if available
-      include_vars: secrets.yml
-      when: secrets_file.stat.exists
-      no_log: true
+      failed_when: false
 
   tasks:
     # Check prerequisites
@@ -40,7 +37,7 @@
       when: docker_check.rc != 0
 
     - name: Check if Docker PostgreSQL container exists
-      command: docker ps --filter "name=wealthpath-postgres" --format "{{.Names}}"
+      shell: docker ps | grep wealthpath-postgres || true
       register: docker_postgres_check
       changed_when: false
       failed_when: false
@@ -48,33 +45,33 @@
     - name: Fail if Docker PostgreSQL container not found
       fail:
         msg: "Docker PostgreSQL container 'wealthpath-postgres-1' not found. Nothing to migrate."
-      when: docker_postgres_check.stdout == ""
+      when: "'wealthpath-postgres' not in docker_postgres_check.stdout"
 
     # Determine source PostgreSQL (Docker)
-    - name: Get Docker PostgreSQL password from container env
-      shell: docker inspect wealthpath-postgres-1 --format '{{range .Config.Env}}{{println .}}{{end}}' | grep POSTGRES_PASSWORD | cut -d= -f2
-      register: docker_postgres_password_result
+    - name: Get Docker PostgreSQL environment variables
+      shell: docker inspect wealthpath-postgres-1 | jq -r '.[0].Config.Env[]' | grep -E '^POSTGRES_(USER|PASSWORD|DB)='
+      register: docker_postgres_env
       changed_when: false
       failed_when: false
+
+    - name: Extract Docker PostgreSQL password
+      set_fact:
+        docker_postgres_password: "{{ docker_postgres_env.stdout | regex_search('POSTGRES_PASSWORD=(.+)', '\\1') | first }}"
       no_log: true
 
-    - name: Get Docker PostgreSQL user from container env
-      shell: docker inspect wealthpath-postgres-1 --format '{{range .Config.Env}}{{println .}}{{end}}' | grep POSTGRES_USER | cut -d= -f2
-      register: docker_postgres_user_result
-      changed_when: false
-      failed_when: false
+    - name: Extract Docker PostgreSQL user
+      set_fact:
+        docker_postgres_user: "{{ docker_postgres_env.stdout | regex_search('POSTGRES_USER=(.+)', '\\1') | first | default(postgres_user) }}"
 
-    - name: Get Docker PostgreSQL database from container env
-      shell: docker inspect wealthpath-postgres-1 --format '{{range .Config.Env}}{{println .}}{{end}}' | grep POSTGRES_DB | cut -d= -f2
-      register: docker_postgres_db_result
-      changed_when: false
-      failed_when: false
+    - name: Extract Docker PostgreSQL database
+      set_fact:
+        docker_postgres_db: "{{ docker_postgres_env.stdout | regex_search('POSTGRES_DB=(.+)', '\\1') | first | default(postgres_db) }}"
 
     - name: Export from Docker PostgreSQL using docker exec
       command: >
         docker exec wealthpath-postgres-1
-        pg_dump -U {{ docker_postgres_user_result.stdout | default(postgres_user) }}
-        -d {{ docker_postgres_db_result.stdout | default(postgres_db) }}
+        pg_dump -U {{ docker_postgres_user }}
+        -d {{ docker_postgres_db }}
         --clean --if-exists
       register: docker_db_dump
       changed_when: false
@@ -93,8 +90,8 @@
         state: present
         update_cache: yes
 
-    - name: Check if host PostgreSQL is installed
-      command: which psql
+    - name: Check if host PostgreSQL server is installed
+      command: systemctl list-unit-files | grep -q postgresql || echo "not_installed"
       register: host_postgres_check
       changed_when: false
       failed_when: false
@@ -107,21 +104,42 @@
           - python3-psycopg2
         state: present
         update_cache: yes
-      when: host_postgres_check.rc != 0
+      when: "'not_installed' in host_postgres_check.stdout"
 
     - name: Start PostgreSQL service
       systemd:
         name: postgresql
         state: started
         enabled: yes
-      when: host_postgres_check.rc != 0
+
+    - name: Wait for PostgreSQL to be ready
+      wait_for:
+        port: 5432
+        host: localhost
+        delay: 5
+        timeout: 30
+
+    - name: Ensure destination database exists
+      become_user: postgres
+      postgresql_db:
+        name: "{{ postgres_db }}"
+        state: present
+
+    - name: Ensure destination user exists
+      become_user: postgres
+      postgresql_user:
+        name: "{{ postgres_user }}"
+        password: "{{ docker_postgres_password }}"
+        priv: "{{ postgres_db }}:ALL"
+        state: present
+      no_log: true
 
     - name: Set destination PostgreSQL parameters (Host)
       set_fact:
         dest_pg_host: "localhost"
         dest_pg_port: "5432"
         dest_pg_user: "{{ postgres_user }}"
-        dest_pg_password: "{{ docker_postgres_password_result.stdout }}"
+        dest_pg_password: "{{ docker_postgres_password }}"
         dest_pg_db: "{{ postgres_db }}"
       no_log: true
 
