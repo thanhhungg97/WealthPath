@@ -90,74 +90,16 @@ resource "aws_instance" "wealthpath" {
 
   user_data = <<-EOF
     #!/bin/bash
-    exec > /var/log/wealthpath-setup.log 2>&1
+    # WealthPath EC2 Bootstrap - Minimal setup for Ansible
+    # Full deployment handled by: cd ansible && ansible-playbook playbook.yml
+    
     set -ex
     
-    # Update system
-    apt update && apt upgrade -y
+    # Install Python for Ansible
+    apt-get update -qq
+    apt-get install -y -qq python3 python3-pip
     
-    # Install Docker
-    curl -fsSL https://get.docker.com | sh
-    
-    # Install Docker Compose plugin
-    apt install -y docker-compose-plugin git jq
-    
-    # Clone app
-    mkdir -p /opt/wealthpath
-    cd /opt/wealthpath
-    git clone https://github.com/thanhhungg97/WealthPath.git .
-    
-    # Get public IP and create sslip.io domain
-    PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
-    SSLIP_DOMAIN=$(echo $PUBLIC_IP | tr '.' '-').sslip.io
-    
-    # Configuration from Terraform
-    CUSTOM_DOMAIN="${var.domain}"
-    USE_SSL="${var.use_ssl}"
-    USE_ZEROSSL="${var.use_zerossl}"
-    ADMIN_EMAIL="${var.admin_email}"
-    
-    if [ -n "$CUSTOM_DOMAIN" ]; then
-      DOMAIN="$CUSTOM_DOMAIN"
-    else
-      DOMAIN="$SSLIP_DOMAIN"
-    fi
-    
-    # Determine protocol
-    if [ "$USE_SSL" = "true" ]; then
-      PROTOCOL="https"
-    else
-      PROTOCOL="http"
-    fi
-    
-    # Set ACME CA for ZeroSSL if enabled
-    ACME_CA=""
-    if [ "$USE_ZEROSSL" = "true" ] && [ "$USE_SSL" = "true" ]; then
-      ACME_CA="https://acme.zerossl.com/v2/DV90"
-    fi
-    
-    # Generate secrets
-    JWT_SECRET=$(openssl rand -hex 32)
-    POSTGRES_PASSWORD=$(openssl rand -hex 16)
-    
-    # Create .env
-    cat > .env << ENVEOF
-POSTGRES_USER=wealthpath
-POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-POSTGRES_DB=wealthpath
-JWT_SECRET=$JWT_SECRET
-DOMAIN=$DOMAIN
-FRONTEND_URL=$PROTOCOL://$DOMAIN
-ALLOWED_ORIGINS=$PROTOCOL://$DOMAIN
-ACME_CA=$ACME_CA
-ACME_EMAIL=$ADMIN_EMAIL
-ENVEOF
-    
-    # Pull and run pre-built images
-    docker compose -f docker-compose.deploy.yaml pull
-    docker compose -f docker-compose.deploy.yaml up -d
-    
-    echo "WealthPath deployed successfully at $PROTOCOL://$DOMAIN"
+    echo "Server ready for Ansible provisioning"
   EOF
 
   root_block_device {

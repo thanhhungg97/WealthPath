@@ -1,0 +1,59 @@
+name: Deploy with Ansible
+
+on:
+  workflow_run:
+    workflows: ["Build and Push Docker Images"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: 'Domain (leave empty for auto)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Ansible
+        run: |
+          pip install ansible
+          ansible-galaxy install -r ansible/requirements.yml
+      
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/wealthpath_key
+          chmod 600 ~/.ssh/wealthpath_key
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts 2>/dev/null || true
+      
+      - name: Run Ansible playbook
+        working-directory: ansible
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          DOMAIN: ${{ github.event.inputs.domain || secrets.DOMAIN }}
+          USE_SSL: "true"
+          USE_ZEROSSL: "true"
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          ansible-playbook playbook.yml -v
+      
+      - name: Health check
+        run: |
+          sleep 10
+          curl -sf https://${{ secrets.DOMAIN }}/api/health || echo "Health check pending..."
+
