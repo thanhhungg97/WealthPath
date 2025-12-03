@@ -42,3 +42,8 @@ coverage/
 # Kubernetes
 *.kubeconfig
 
+# Ansible
+ansible/secrets.yml
+ansible/.vault_pass
+.vault_pass
+

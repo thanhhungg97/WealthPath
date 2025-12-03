@@ -1,6 +1,7 @@
 ---
 # WealthPath Deployment Playbook
-# Usage: ansible-playbook -i inventory.yml playbook.yml
+# Usage: ansible-playbook playbook.yml
+# With vault: ansible-playbook playbook.yml --ask-vault-pass
 
 - name: Deploy WealthPath
   hosts: wealthpath
@@ -9,6 +10,17 @@
   vars:
     docker_compose_version: "2.24.0"
   
+  pre_tasks:
+    - name: Check if secrets.yml exists
+      local_action: stat path=secrets.yml
+      register: secrets_file
+      become: no
+
+    - name: Include secrets if available
+      include_vars: secrets.yml
+      when: secrets_file.stat.exists
+      no_log: true
+
   tasks:
     # ============================================
     # System Setup

@@ -34,8 +34,59 @@ Set environment variables or edit `inventory.yml`:
 | `SERVER_IP` | Target server IP | `13.228.119.0` |
 | `DOMAIN` | Custom domain | Auto (sslip.io) |
 | `USE_SSL` | Enable HTTPS | `true` |
-| `USE_ZEROSSL` | Use ZeroSSL CA | `false` |
+| `USE_ZEROSSL` | Use ZeroSSL CA | `true` |
 | `ADMIN_EMAIL` | Email for certs | `admin@example.com` |
+
+## Secrets Management (Ansible Vault)
+
+Store sensitive data securely with Ansible Vault:
+
+### Setup
+
+```bash
+cd ansible
+
+# 1. Copy the example secrets file
+cp secrets.yml.example secrets.yml
+
+# 2. Edit with your actual secrets
+nano secrets.yml
+
+# 3. Encrypt the file
+ansible-vault encrypt secrets.yml
+```
+
+### secrets.yml contents
+
+```yaml
+# OAuth - Google
+google_client_id: "xxx.apps.googleusercontent.com"
+google_client_secret: "xxx"
+
+# OAuth - Facebook
+facebook_app_id: "xxx"
+facebook_app_secret: "xxx"
+
+# AI Chat
+openai_api_key: "sk-xxx"
+```
+
+### Deploy with vault
+
+```bash
+# Prompt for vault password
+ansible-playbook playbook.yml --ask-vault-pass
+
+# Or use a password file (don't commit this!)
+echo "your-password" > .vault_pass
+ansible-playbook playbook.yml --vault-password-file .vault_pass
+```
+
+### Edit encrypted secrets
+
+```bash
+ansible-vault edit secrets.yml
+```
 
 ## Usage Examples
 
@@ -82,6 +133,8 @@ ansible/
 ├── inventory.yml        # Host and variable definitions
 ├── playbook.yml         # Main deployment playbook
 ├── requirements.yml     # Galaxy dependencies
+├── secrets.yml          # 🔒 Encrypted secrets (git-ignored)
+├── secrets.yml.example  # Template for secrets
 ├── templates/
 │   └── env.j2          # .env file template
 └── README.md
