@@ -1,0 +1,65 @@
+---
+# Configuration Tasks
+# Gets server info, sets domain, generates secrets, creates .env
+
+- name: Get public IP
+  uri:
+    url: http://169.254.169.254/latest/meta-data/public-ipv4
+    return_content: yes
+  register: public_ip_result
+  ignore_errors: yes
+
+- name: Set public IP fact
+  set_fact:
+    server_ip: "{{ public_ip_result.content | default(ansible_facts['default_ipv4']['address']) }}"
+
+- name: Generate sslip.io domain
+  set_fact:
+    auto_domain: "{{ server_ip | replace('.', '-') }}.sslip.io"
+
+- name: Set final domain
+  set_fact:
+    final_domain: "{{ domain if domain != '' else auto_domain }}"
+    protocol: "{{ 'https' if use_ssl == 'true' else 'http' }}"
+
+- name: Set ACME CA for ZeroSSL
+  set_fact:
+    acme_ca: "{{ 'https://acme.zerossl.com/v2/DV90' if (use_zerossl == 'true' and use_ssl == 'true') else '' }}"
+
+- name: Check if .env exists
+  stat:
+    path: "{{ app_dir }}/.env"
+  register: env_file
+
+- name: Generate secrets
+  set_fact:
+    jwt_secret: "{{ lookup('password', '/dev/null length=64 chars=hexdigits') }}"
+    postgres_password: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+  when: not env_file.stat.exists
+
+- name: Read existing secrets
+  slurp:
+    src: "{{ app_dir }}/.env"
+  register: existing_env
+  when: env_file.stat.exists
+
+- name: Parse existing JWT secret
+  set_fact:
+    jwt_secret: "{{ existing_env.content | b64decode | regex_search('JWT_SECRET=(.+)', '\\1') | first }}"
+  when: env_file.stat.exists and existing_env.content is defined
+  ignore_errors: yes
+
+- name: Parse existing Postgres password
+  set_fact:
+    postgres_password: "{{ existing_env.content | b64decode | regex_search('POSTGRES_PASSWORD=(.+)', '\\1') | first }}"
+  when: env_file.stat.exists and existing_env.content is defined
+  ignore_errors: yes
+
+- name: Create .env file
+  template:
+    src: templates/env.j2
+    dest: "{{ app_dir }}/.env"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
+

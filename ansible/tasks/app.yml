@@ -1,0 +1,20 @@
+---
+# Application Setup Tasks
+# Creates app directory and clones repository
+
+- name: Create app directory
+  file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Clone/update repository
+  git:
+    repo: "{{ repo_url }}"
+    dest: "{{ app_dir }}"
+    version: main
+    force: yes
+  become_user: ubuntu
+

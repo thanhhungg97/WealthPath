@@ -103,9 +103,19 @@ ADMIN_EMAIL=you@example.com \
 ansible-playbook playbook.yml
 ```
 
-### Update application only (skip Docker install)
+### Run specific task modules
+
+You can run individual task files for testing or partial updates:
+
 ```bash
-ansible-playbook playbook.yml --tags=app
+# Test system setup only
+ansible-playbook playbook.yml --start-at-task "System Setup"
+
+# Skip to deployment (assumes system/docker/postgres already set up)
+ansible-playbook playbook.yml --start-at-task "Deploy Application"
+
+# Run only configuration tasks
+ansible-playbook playbook.yml --start-at-task "Configuration" --end-at-task "Configuration"
 ```
 
 ### Check connectivity
@@ -131,14 +141,42 @@ ansible wealthpath -m shell -a "docker compose -f /opt/wealthpath/docker-compose
 ansible/
 ├── ansible.cfg          # Ansible configuration
 ├── inventory.yml        # Host and variable definitions
-├── playbook.yml         # Main deployment playbook
+├── playbook.yml         # Main deployment playbook (orchestrates tasks)
 ├── requirements.yml     # Galaxy dependencies
 ├── secrets.yml          # 🔒 Encrypted secrets (git-ignored)
 ├── secrets.yml.example  # Template for secrets
+├── tasks/               # Modular task files
+│   ├── system.yml      # System setup and packages
+│   ├── docker.yml      # Docker installation
+│   ├── postgresql.yml  # PostgreSQL setup
+│   ├── app.yml         # Application directory and git
+│   ├── config.yml      # Domain, secrets, .env generation
+│   ├── deploy.yml      # Docker Compose deployment
+│   └── health.yml       # Health checks
+├── handlers/
+│   └── main.yml        # Handler definitions (for reference)
 ├── templates/
 │   └── env.j2          # .env file template
 └── README.md
 ```
+
+### Task File Organization
+
+Each task file handles a specific aspect of deployment:
+
+- **`tasks/system.yml`** - Base system packages and updates
+- **`tasks/docker.yml`** - Docker Engine and Compose installation
+- **`tasks/postgresql.yml`** - PostgreSQL installation, database, and user creation
+- **`tasks/app.yml`** - Application directory and repository cloning
+- **`tasks/config.yml`** - Server info, domain resolution, secrets, .env file
+- **`tasks/deploy.yml`** - Docker Compose image pulling and service startup
+- **`tasks/health.yml`** - Service health verification
+
+This modular structure makes it easy to:
+- Understand what each step does
+- Modify specific parts without affecting others
+- Reuse tasks in other playbooks
+- Debug issues by focusing on specific modules
 
 ## Integration with Terraform
 

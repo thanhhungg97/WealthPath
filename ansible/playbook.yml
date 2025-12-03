@@ -2,6 +2,9 @@
 # WealthPath Deployment Playbook
 # Usage: ansible-playbook playbook.yml
 # With vault: ansible-playbook playbook.yml --ask-vault-pass
+#
+# This playbook orchestrates the deployment by importing modular task files.
+# Each task file handles a specific aspect of the deployment.
 
 - name: Deploy WealthPath
   hosts: wealthpath
@@ -22,267 +25,33 @@
       no_log: true
 
   tasks:
-    # ============================================
-    # System Setup
-    # ============================================
-    - name: Update apt cache
-      apt:
-        update_cache: yes
-        cache_valid_time: 3600
+    # System setup - install base packages
+    - name: System Setup
+      import_tasks: tasks/system.yml
 
-    - name: Install required packages
-      apt:
-        name:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - git
-          - jq
-          - python3-pip
-          - gnupg
-          - lsb-release
-        state: present
+    # Docker installation and configuration
+    - name: Docker Installation
+      import_tasks: tasks/docker.yml
 
-    # ============================================
-    # Docker Installation
-    # ============================================
-    - name: Add Docker GPG key
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
+    # PostgreSQL installation and configuration
+    - name: PostgreSQL Setup
+      import_tasks: tasks/postgresql.yml
 
-    - name: Add Docker repository
-      apt_repository:
-        repo: "deb https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
-        state: present
+    # Application directory and repository
+    - name: Application Setup
+      import_tasks: tasks/app.yml
 
-    - name: Install Docker
-      apt:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-compose-plugin
-        state: present
-        update_cache: yes
+    # Configuration - domain, secrets, .env
+    - name: Configuration
+      import_tasks: tasks/config.yml
 
-    - name: Start Docker service
-      systemd:
-        name: docker
-        state: started
-        enabled: yes
+    # Docker Compose deployment
+    - name: Deploy Application
+      import_tasks: tasks/deploy.yml
 
-    - name: Add ubuntu user to docker group
-      user:
-        name: ubuntu
-        groups: docker
-        append: yes
-
-    # ============================================
-    # PostgreSQL Installation
-    # ============================================
-    - name: Install PostgreSQL
-      apt:
-        name:
-          - postgresql
-          - postgresql-contrib
-          - python3-psycopg2
-        state: present
-        update_cache: yes
-
-    - name: Start PostgreSQL service
-      systemd:
-        name: postgresql
-        state: started
-        enabled: yes
-
-    - name: Wait for PostgreSQL to be ready
-      wait_for:
-        port: 5432
-        host: localhost
-        delay: 5
-        timeout: 30
-
-    - name: Check if database exists
-      become_user: postgres
-      command: psql -lqt | cut -d \| -f 1 | grep -qw "{{ postgres_db }}"
-      register: db_exists
-      changed_when: false
-      failed_when: false
-
-    - name: Create PostgreSQL database
-      become_user: postgres
-      postgresql_db:
-        name: "{{ postgres_db }}"
-        state: present
-      when: not db_exists.rc == 0
-
-    - name: Check if database user exists
-      become_user: postgres
-      command: psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='{{ postgres_user }}'"
-      register: user_exists
-      changed_when: false
-      failed_when: false
-
-    - name: Create PostgreSQL user
-      become_user: postgres
-      postgresql_user:
-        name: "{{ postgres_user }}"
-        password: "{{ postgres_password }}"
-        priv: "{{ postgres_db }}:ALL"
-        state: present
-      when: not user_exists.rc == 0
-
-    - name: Get PostgreSQL version
-      shell: psql --version | awk '{print $3}' | cut -d. -f1,2
-      register: postgres_version
-      changed_when: false
-
-    - name: Configure PostgreSQL to allow local connections
-      lineinfile:
-        path: "/etc/postgresql/{{ postgres_version.stdout }}/main/pg_hba.conf"
-        regexp: "^host\\s+all\\s+all\\s+127\\.0\\.0\\.1/32\\s+md5"
-        line: "host    all             all             127.0.0.1/32            md5"
-        state: present
-        backup: yes
-      notify: restart postgresql
-
-    - name: Configure PostgreSQL to listen on localhost
-      lineinfile:
-        path: "/etc/postgresql/{{ postgres_version.stdout }}/main/postgresql.conf"
-        regexp: "^#?listen_addresses\\s*="
-        line: "listen_addresses = 'localhost'"
-        state: present
-        backup: yes
-      notify: restart postgresql
-
-    # ============================================
-    # Application Setup
-    # ============================================
-    - name: Create app directory
-      file:
-        path: "{{ app_dir }}"
-        state: directory
-        owner: ubuntu
-        group: ubuntu
-        mode: '0755'
-
-    - name: Clone/update repository
-      git:
-        repo: "{{ repo_url }}"
-        dest: "{{ app_dir }}"
-        version: main
-        force: yes
-      become_user: ubuntu
-
-    # ============================================
-    # Get Server Info
-    # ============================================
-    - name: Get public IP
-      uri:
-        url: http://169.254.169.254/latest/meta-data/public-ipv4
-        return_content: yes
-      register: public_ip_result
-      ignore_errors: yes
-
-    - name: Set public IP fact
-      set_fact:
-        server_ip: "{{ public_ip_result.content | default(ansible_facts['default_ipv4']['address']) }}"
-
-    - name: Generate sslip.io domain
-      set_fact:
-        auto_domain: "{{ server_ip | replace('.', '-') }}.sslip.io"
-
-    - name: Set final domain
-      set_fact:
-        final_domain: "{{ domain if domain != '' else auto_domain }}"
-        protocol: "{{ 'https' if use_ssl == 'true' else 'http' }}"
-
-    - name: Set ACME CA for ZeroSSL
-      set_fact:
-        acme_ca: "{{ 'https://acme.zerossl.com/v2/DV90' if (use_zerossl == 'true' and use_ssl == 'true') else '' }}"
-
-    # ============================================
-    # Environment Configuration
-    # ============================================
-    - name: Check if .env exists
-      stat:
-        path: "{{ app_dir }}/.env"
-      register: env_file
-
-    - name: Generate secrets
-      set_fact:
-        jwt_secret: "{{ lookup('password', '/dev/null length=64 chars=hexdigits') }}"
-        postgres_password: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
-      when: not env_file.stat.exists
-
-    - name: Read existing secrets
-      slurp:
-        src: "{{ app_dir }}/.env"
-      register: existing_env
-      when: env_file.stat.exists
-
-    - name: Parse existing JWT secret
-      set_fact:
-        jwt_secret: "{{ existing_env.content | b64decode | regex_search('JWT_SECRET=(.+)', '\\1') | first }}"
-      when: env_file.stat.exists and existing_env.content is defined
-      ignore_errors: yes
-
-    - name: Parse existing Postgres password
-      set_fact:
-        postgres_password: "{{ existing_env.content | b64decode | regex_search('POSTGRES_PASSWORD=(.+)', '\\1') | first }}"
-      when: env_file.stat.exists and existing_env.content is defined
-      ignore_errors: yes
-
-    - name: Create .env file
-      template:
-        src: templates/env.j2
-        dest: "{{ app_dir }}/.env"
-        owner: ubuntu
-        group: ubuntu
-        mode: '0600'
-
-    # ============================================
-    # Deploy Application
-    # ============================================
-    - name: Pull Docker images
-      community.docker.docker_compose_v2:
-        project_src: "{{ app_dir }}"
-        files:
-          - "{{ compose_file }}"
-        pull: always
-        state: present
-      # Run as root since ubuntu user needs re-login for docker group
-
-    - name: Start services
-      community.docker.docker_compose_v2:
-        project_src: "{{ app_dir }}"
-        files:
-          - "{{ compose_file }}"
-        state: present
-      register: compose_result
-
-    # ============================================
-    # Health Checks
-    # ============================================
-    - name: Wait for backend to be ready
-      command: docker exec wealthpath-backend-1 wget -qO- http://localhost:8080/api/health
-      register: backend_health
-      retries: 30
-      delay: 5
-      until: backend_health.rc == 0
-      changed_when: false
-
-    - name: Display deployment info
-      debug:
-        msg: |
-          
-          ✅ WealthPath deployed successfully!
-          
-          URL: {{ protocol }}://{{ final_domain }}
-          IP:  {{ server_ip }}
-          
-          SSH: ssh -i ~/.ssh/wealthpath_key ubuntu@{{ server_ip }}
+    # Health checks and verification
+    - name: Health Checks
+      import_tasks: tasks/health.yml
 
   handlers:
     - name: restart postgresql

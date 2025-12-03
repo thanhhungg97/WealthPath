@@ -1,0 +1,21 @@
+---
+# Deployment Tasks
+# Pulls Docker images and starts services
+
+- name: Pull Docker images
+  community.docker.docker_compose_v2:
+    project_src: "{{ app_dir }}"
+    files:
+      - "{{ compose_file }}"
+    pull: always
+    state: present
+  # Run as root since ubuntu user needs re-login for docker group
+
+- name: Start services
+  community.docker.docker_compose_v2:
+    project_src: "{{ app_dir }}"
+    files:
+      - "{{ compose_file }}"
+    state: present
+  register: compose_result
+
