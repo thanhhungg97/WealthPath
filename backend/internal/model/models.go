@@ -8,16 +8,16 @@ import (
 )
 
 type User struct {
-	ID            uuid.UUID  `db:"id" json:"id"`
-	Email         string     `db:"email" json:"email"`
-	PasswordHash  *string    `db:"password_hash" json:"-"`
-	Name          string     `db:"name" json:"name"`
-	Currency      string     `db:"currency" json:"currency"`
-	OAuthProvider *string    `db:"oauth_provider" json:"oauthProvider,omitempty"`
-	OAuthID       *string    `db:"oauth_id" json:"-"`
-	AvatarURL     *string    `db:"avatar_url" json:"avatarUrl,omitempty"`
-	CreatedAt     time.Time  `db:"created_at" json:"createdAt"`
-	UpdatedAt     time.Time  `db:"updated_at" json:"updatedAt"`
+	ID            uuid.UUID `db:"id" json:"id"`
+	Email         string    `db:"email" json:"email"`
+	PasswordHash  *string   `db:"password_hash" json:"-"`
+	Name          string    `db:"name" json:"name"`
+	Currency      string    `db:"currency" json:"currency"`
+	OAuthProvider *string   `db:"oauth_provider" json:"oauthProvider,omitempty"`
+	OAuthID       *string   `db:"oauth_id" json:"-"`
+	AvatarURL     *string   `db:"avatar_url" json:"avatarUrl,omitempty"`
+	CreatedAt     time.Time `db:"created_at" json:"createdAt"`
+	UpdatedAt     time.Time `db:"updated_at" json:"updatedAt"`
 }
 
 type TransactionType string
@@ -149,6 +149,46 @@ type MonthlyComparison struct {
 	Month    string          `json:"month"`
 	Income   decimal.Decimal `json:"income"`
 	Expenses decimal.Decimal `json:"expenses"`
+}
+
+// Recurring Transactions
+type RecurringFrequency string
+
+const (
+	FrequencyDaily    RecurringFrequency = "daily"
+	FrequencyWeekly   RecurringFrequency = "weekly"
+	FrequencyBiweekly RecurringFrequency = "biweekly"
+	FrequencyMonthly  RecurringFrequency = "monthly"
+	FrequencyYearly   RecurringFrequency = "yearly"
+)
+
+type RecurringTransaction struct {
+	ID             uuid.UUID          `db:"id" json:"id"`
+	UserID         uuid.UUID          `db:"user_id" json:"userId"`
+	Type           TransactionType    `db:"type" json:"type"`
+	Amount         decimal.Decimal    `db:"amount" json:"amount"`
+	Currency       string             `db:"currency" json:"currency"`
+	Category       string             `db:"category" json:"category"`
+	Description    string             `db:"description" json:"description"`
+	Frequency      RecurringFrequency `db:"frequency" json:"frequency"`
+	StartDate      time.Time          `db:"start_date" json:"startDate"`
+	EndDate        *time.Time         `db:"end_date" json:"endDate,omitempty"`
+	NextOccurrence time.Time          `db:"next_occurrence" json:"nextOccurrence"`
+	LastGenerated  *time.Time         `db:"last_generated" json:"lastGenerated,omitempty"`
+	IsActive       bool               `db:"is_active" json:"isActive"`
+	CreatedAt      time.Time          `db:"created_at" json:"createdAt"`
+	UpdatedAt      time.Time          `db:"updated_at" json:"updatedAt"`
+}
+
+// UpcomingBill is a simplified view for dashboard widget
+type UpcomingBill struct {
+	ID          uuid.UUID       `json:"id"`
+	Description string          `json:"description"`
+	Amount      decimal.Decimal `json:"amount"`
+	Currency    string          `json:"currency"`
+	Category    string          `json:"category"`
+	DueDate     time.Time       `json:"dueDate"`
+	Type        TransactionType `json:"type"`
 }
 
 // Categories

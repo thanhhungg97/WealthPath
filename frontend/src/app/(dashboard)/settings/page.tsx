@@ -1,13 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { useMutation } from "@tanstack/react-query"
-import { useAuthStore } from "@/store/auth"
-import { api, SUPPORTED_CURRENCIES } from "@/lib/api"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { CreditCard, Loader2, LogOut, Save, User } from "lucide-react"
+import { SUPPORTED_CURRENCIES, api } from "@/lib/api"
 import {
   Select,
   SelectContent,
@@ -15,7 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { User, CreditCard, LogOut, Save, Loader2 } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useAuthStore } from "@/store/auth"
+import { useMutation } from "@tanstack/react-query"
+import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
 
 export default function SettingsPage() {

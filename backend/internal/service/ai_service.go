@@ -258,3 +258,4 @@ func (s *AIService) addSavingsGoal(ctx context.Context, userID uuid.UUID, intent
 	}, nil
 }
 
+

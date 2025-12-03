@@ -99,3 +99,4 @@ CREATE INDEX idx_debt_payments_debt_id ON debt_payments(debt_id);
 CREATE INDEX idx_debt_payments_date ON debt_payments(date);
 
 
+

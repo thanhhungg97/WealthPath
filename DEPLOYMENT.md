@@ -229,3 +229,4 @@ Best for full control and cost-effectiveness at scale.
 | Vercel + Supabase | Generous | $20/month |
 
 
+

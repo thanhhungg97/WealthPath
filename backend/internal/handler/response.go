@@ -21,3 +21,4 @@ func respondError(w http.ResponseWriter, status int, message string) {
 	respondJSON(w, status, ErrorResponse{Error: message})
 }
 
+

@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { api, DashboardData } from "@/lib/api"
+import { api, DashboardData, UpcomingBill } from "@/lib/api"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -13,7 +13,10 @@ import {
   CreditCard,
   ArrowUpRight,
   ArrowDownRight,
+  Calendar,
+  RefreshCw,
 } from "lucide-react"
+import Link from "next/link"
 import {
   AreaChart,
   Area,
@@ -33,6 +36,11 @@ export default function DashboardPage() {
   const { data, isLoading } = useQuery<DashboardData>({
     queryKey: ["dashboard"],
     queryFn: () => api.getDashboard(),
+  })
+
+  const { data: upcomingBills } = useQuery<UpcomingBill[]>({
+    queryKey: ["upcoming-bills"],
+    queryFn: () => api.getUpcomingBills(),
   })
 
   if (isLoading || !data) {
@@ -353,6 +361,64 @@ export default function DashboardPage() {
         </Card>
       </div>
 
+      {/* Upcoming Bills */}
+      {upcomingBills && upcomingBills.length > 0 && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <RefreshCw className="w-5 h-5" />
+              Upcoming Bills & Income
+            </CardTitle>
+            <Link
+              href="/recurring"
+              className="text-sm text-primary hover:underline"
+            >
+              View all
+            </Link>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {upcomingBills.slice(0, 4).map((bill) => {
+                const isIncome = bill.type === "income"
+                const dueDate = new Date(bill.dueDate)
+                const daysUntil = Math.ceil(
+                  (dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                )
+                return (
+                  <div
+                    key={bill.id}
+                    className={`p-4 rounded-xl border ${
+                      isIncome ? "bg-success/5 border-success/20" : "bg-destructive/5 border-destructive/20"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-medium text-sm">{bill.description || bill.category}</p>
+                        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                          <Calendar className="w-3 h-3" />
+                          {daysUntil === 0
+                            ? "Today"
+                            : daysUntil === 1
+                            ? "Tomorrow"
+                            : `In ${daysUntil} days`}
+                        </div>
+                      </div>
+                      <span
+                        className={`text-sm font-semibold ${
+                          isIncome ? "text-success" : "text-destructive"
+                        }`}
+                      >
+                        {isIncome ? "+" : "-"}{formatCurrency(bill.amount)}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Debt Overview */}
       {parseFloat(data.totalDebt) > 0 && (
         <Card className="border-destructive/30 bg-destructive/5">
@@ -372,5 +438,6 @@ export default function DashboardPage() {
     </div>
   )
 }
+
 
 

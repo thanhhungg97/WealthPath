@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   PiggyBank,
+  RefreshCw,
   Settings,
   Target,
   TrendingUp,
@@ -21,6 +22,7 @@ import { usePathname } from "next/navigation"
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Transactions", href: "/transactions", icon: ArrowUpDown },
+  { name: "Recurring", href: "/recurring", icon: RefreshCw },
   { name: "Budgets", href: "/budgets", icon: PiggyBank },
   { name: "Savings Goals", href: "/savings", icon: Target },
   { name: "Debt Manager", href: "/debts", icon: CreditCard },

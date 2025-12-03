@@ -34,6 +34,7 @@ func main() {
 	budgetRepo := repository.NewBudgetRepository(db)
 	savingsRepo := repository.NewSavingsGoalRepository(db)
 	debtRepo := repository.NewDebtRepository(db)
+	recurringRepo := repository.NewRecurringRepository(db)
 
 	// Initialize services
 	userService := service.NewUserService(userRepo)
@@ -41,6 +42,7 @@ func main() {
 	budgetService := service.NewBudgetService(budgetRepo)
 	savingsService := service.NewSavingsGoalService(savingsRepo)
 	debtService := service.NewDebtService(debtRepo)
+	recurringService := service.NewRecurringService(recurringRepo, transactionRepo)
 	dashboardService := service.NewDashboardService(transactionRepo, budgetRepo, savingsRepo, debtRepo)
 	aiService := service.NewAIService(transactionService, budgetService, savingsService)
 
@@ -51,6 +53,7 @@ func main() {
 	budgetHandler := handler.NewBudgetHandler(budgetService)
 	savingsHandler := handler.NewSavingsGoalHandler(savingsService)
 	debtHandler := handler.NewDebtHandler(debtService)
+	recurringHandler := handler.NewRecurringHandler(recurringService)
 	dashboardHandler := handler.NewDashboardHandler(dashboardService)
 	aiHandler := handler.NewAIHandler(aiService)
 
@@ -133,6 +136,16 @@ func main() {
 		r.Post("/api/debts/{id}/payment", debtHandler.MakePayment)
 		r.Get("/api/debts/{id}/payoff-plan", debtHandler.GetPayoffPlan)
 		r.Get("/api/debts/calculator", debtHandler.InterestCalculator)
+
+		// Recurring Transactions
+		r.Get("/api/recurring", recurringHandler.List)
+		r.Post("/api/recurring", recurringHandler.Create)
+		r.Get("/api/recurring/upcoming", recurringHandler.Upcoming)
+		r.Get("/api/recurring/{id}", recurringHandler.Get)
+		r.Put("/api/recurring/{id}", recurringHandler.Update)
+		r.Delete("/api/recurring/{id}", recurringHandler.Delete)
+		r.Post("/api/recurring/{id}/pause", recurringHandler.Pause)
+		r.Post("/api/recurring/{id}/resume", recurringHandler.Resume)
 
 		// AI Chat
 		r.Post("/api/chat", aiHandler.Chat)

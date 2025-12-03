@@ -216,6 +216,45 @@ class ApiClient {
       body: JSON.stringify({ message }),
     })
   }
+
+  // Recurring Transactions
+  async getRecurringTransactions() {
+    return this.request<RecurringTransaction[]>("/api/recurring")
+  }
+
+  async createRecurringTransaction(data: CreateRecurringInput) {
+    return this.request<RecurringTransaction>("/api/recurring", {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateRecurringTransaction(id: string, data: UpdateRecurringInput) {
+    return this.request<RecurringTransaction>(`/api/recurring/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteRecurringTransaction(id: string) {
+    return this.request(`/api/recurring/${id}`, { method: "DELETE" })
+  }
+
+  async pauseRecurringTransaction(id: string) {
+    return this.request<RecurringTransaction>(`/api/recurring/${id}/pause`, {
+      method: "POST",
+    })
+  }
+
+  async resumeRecurringTransaction(id: string) {
+    return this.request<RecurringTransaction>(`/api/recurring/${id}/resume`, {
+      method: "POST",
+    })
+  }
+
+  async getUpcomingBills() {
+    return this.request<UpcomingBill[]>("/api/recurring/upcoming")
+  }
 }
 
 export const api = new ApiClient()
@@ -412,4 +451,65 @@ export interface MonthlyComparison {
   income: string
   expenses: string
 }
+
+// Recurring Transactions
+export type RecurringFrequency = "daily" | "weekly" | "biweekly" | "monthly" | "yearly"
+
+export interface RecurringTransaction {
+  id: string
+  userId: string
+  type: "income" | "expense"
+  amount: string
+  currency: string
+  category: string
+  description: string
+  frequency: RecurringFrequency
+  startDate: string
+  endDate?: string
+  nextOccurrence: string
+  lastGenerated?: string
+  isActive: boolean
+  createdAt: string
+}
+
+export interface CreateRecurringInput {
+  type: "income" | "expense"
+  amount: number
+  currency?: string
+  category: string
+  description?: string
+  frequency: RecurringFrequency
+  startDate: string
+  endDate?: string
+}
+
+export interface UpdateRecurringInput {
+  type?: "income" | "expense"
+  amount?: number
+  currency?: string
+  category?: string
+  description?: string
+  frequency?: RecurringFrequency
+  startDate?: string
+  endDate?: string
+  isActive?: boolean
+}
+
+export interface UpcomingBill {
+  id: string
+  description: string
+  amount: string
+  currency: string
+  category: string
+  dueDate: string
+  type: "income" | "expense"
+}
+
+export const FREQUENCY_OPTIONS = [
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "biweekly", label: "Bi-weekly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "yearly", label: "Yearly" },
+] as const
 
