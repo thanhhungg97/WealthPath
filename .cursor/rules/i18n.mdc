@@ -1,0 +1,76 @@
+---
+description: Internationalization (i18n) rule for frontend UI changes
+globs:
+  - frontend/src/**/*.tsx
+  - frontend/src/**/*.ts
+---
+
+# Internationalization (i18n) Requirements
+
+When making changes to any frontend UI component or page:
+
+## Required Actions
+
+1. **Never hardcode user-facing text** - All visible text must use translation keys via `useTranslations()` hook
+
+2. **Update translation files** when adding/modifying UI text:
+   - `frontend/src/messages/en.json` (English)
+   - `frontend/src/messages/vi.json` (Vietnamese)
+
+3. **Use the translation hook**:
+   ```tsx
+   import { useTranslations } from 'next-intl'
+   
+   export default function MyComponent() {
+     const t = useTranslations()
+     return <h1>{t('section.title')}</h1>
+   }
+   ```
+
+4. **Translation key naming convention**:
+   - Use nested keys: `section.subsection.key`
+   - Examples: `dashboard.title`, `transactions.addTransaction`, `common.save`
+   - Group by feature/page: `dashboard.*`, `transactions.*`, `budgets.*`
+
+5. **Common keys** (use from `common.*`):
+   - `common.save`, `common.cancel`, `common.delete`, `common.edit`
+   - `common.loading`, `common.error`, `common.success`
+   - `common.selectCategory`, `common.all`
+
+## Checklist for UI Changes
+
+- [ ] All new text uses `t('key')` instead of hardcoded strings
+- [ ] Added keys to `en.json`
+- [ ] Added keys to `vi.json` with proper Vietnamese translation
+- [ ] Toast messages use translation keys
+- [ ] Form labels, placeholders, and buttons are translated
+- [ ] Empty states and error messages are translated
+
+## Example
+
+```tsx
+// ❌ Bad - hardcoded text
+<Button>Add Transaction</Button>
+<p>No transactions found</p>
+
+// ✅ Good - using translations
+<Button>{t('transactions.addTransaction')}</Button>
+<p>{t('transactions.noTransactions')}</p>
+```
+
+## Translation File Structure
+
+```json
+{
+  "common": { /* shared across all pages */ },
+  "dashboard": { /* dashboard page */ },
+  "transactions": { /* transactions page */ },
+  "budgets": { /* budgets page */ },
+  "savings": { /* savings page */ },
+  "debts": { /* debts page */ },
+  "recurring": { /* recurring transactions */ },
+  "settings": { /* settings page */ },
+  "auth": { /* login/register */ },
+  "calculator": { /* calculator page */ }
+}
+```
