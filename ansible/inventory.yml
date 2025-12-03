@@ -18,7 +18,7 @@ all:
     # Domain & SSL
     domain: "{{ lookup('env', 'DOMAIN') | default('', true) }}"
     use_ssl: "{{ lookup('env', 'USE_SSL') | default('true', true) }}"
-    use_zerossl: "{{ lookup('env', 'USE_ZEROSSL') | default('false', true) }}"
+    use_zerossl: "{{ lookup('env', 'USE_ZEROSSL') | default('true', true) }}"
     admin_email: "{{ lookup('env', 'ADMIN_EMAIL') | default('admin@example.com', true) }}"
     
     # Docker compose file
