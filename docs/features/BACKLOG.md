@@ -10,8 +10,8 @@
 
 ## Top 5 High Priority Features
 
-### 1. 🔴 Recurring Transactions (P0)
-**Status**: Not Started  
+### 1. ✅ Recurring Transactions (P0) - DONE
+**Status**: Completed  
 **Effort**: Medium (3-5 days)
 
 Automatically add recurring income/expenses (salary, rent, subscriptions).
@@ -22,16 +22,20 @@ Automatically add recurring income/expenses (salary, rent, subscriptions).
 - Improves budget accuracy
 
 **Features**:
-- [ ] Create recurring transaction templates
-- [ ] Frequency: daily, weekly, monthly, yearly
-- [ ] Auto-generate on schedule (cron job)
-- [ ] Edit/pause/delete recurring items
-- [ ] Dashboard widget showing upcoming bills
+- [x] Create recurring transaction templates
+- [x] Frequency: daily, weekly, biweekly, monthly, yearly
+- [x] Auto-generate on schedule (ProcessDueTransactions method ready for cron)
+- [x] Edit/pause/delete recurring items
+- [x] Dashboard widget showing upcoming bills
 
-**Files to modify**:
-- `backend/internal/model/models.go` - Add RecurringTransaction model
-- `backend/internal/service/recurring_service.go` - New service
-- `frontend/src/app/(dashboard)/recurring/page.tsx` - New page
+**Files created/modified**:
+- `migrations/db/migration/V3__recurring_transactions.sql` - DB schema
+- `backend/internal/model/models.go` - RecurringTransaction, UpcomingBill models
+- `backend/internal/repository/recurring_repository.go` - DB operations
+- `backend/internal/service/recurring_service.go` - Business logic
+- `backend/internal/handler/recurring_handler.go` - API endpoints
+- `frontend/src/app/(dashboard)/recurring/page.tsx` - UI page
+- `frontend/src/app/(dashboard)/dashboard/page.tsx` - Upcoming bills widget
 
 ---
 
