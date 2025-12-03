@@ -1,6 +1,6 @@
 ---
 # Database Migration Playbook
-# One-time migration from Docker PostgreSQL to host PostgreSQL
+# Migrates data from Docker PostgreSQL to host PostgreSQL
 # 
 # Usage: ansible-playbook migrate-db-playbook.yml
 # With vault: ansible-playbook migrate-db-playbook.yml --ask-vault-pass
@@ -27,7 +27,7 @@
       no_log: true
 
   tasks:
-    # Docker must be installed to access Docker PostgreSQL
+    # Check prerequisites
     - name: Check if Docker is installed
       command: which docker
       register: docker_check
@@ -39,9 +39,98 @@
         msg: "Docker must be installed to migrate from Docker PostgreSQL"
       when: docker_check.rc != 0
 
-    # Run migration tasks
+    - name: Check if Docker PostgreSQL container exists
+      command: docker ps --filter "name=wealthpath-postgres" --format "{{.Names}}"
+      register: docker_postgres_check
+      changed_when: false
+      failed_when: false
+
+    - name: Fail if Docker PostgreSQL container not found
+      fail:
+        msg: "Docker PostgreSQL container 'wealthpath-postgres-1' not found. Nothing to migrate."
+      when: docker_postgres_check.stdout == ""
+
+    # Determine source PostgreSQL (Docker)
+    - name: Get Docker PostgreSQL password from container env
+      shell: docker inspect wealthpath-postgres-1 --format '{{range .Config.Env}}{{println .}}{{end}}' | grep POSTGRES_PASSWORD | cut -d= -f2
+      register: docker_postgres_password_result
+      changed_when: false
+      failed_when: false
+      no_log: true
+
+    - name: Get Docker PostgreSQL user from container env
+      shell: docker inspect wealthpath-postgres-1 --format '{{range .Config.Env}}{{println .}}{{end}}' | grep POSTGRES_USER | cut -d= -f2
+      register: docker_postgres_user_result
+      changed_when: false
+      failed_when: false
+
+    - name: Get Docker PostgreSQL database from container env
+      shell: docker inspect wealthpath-postgres-1 --format '{{range .Config.Env}}{{println .}}{{end}}' | grep POSTGRES_DB | cut -d= -f2
+      register: docker_postgres_db_result
+      changed_when: false
+      failed_when: false
+
+    - name: Export from Docker PostgreSQL using docker exec
+      command: >
+        docker exec wealthpath-postgres-1
+        pg_dump -U {{ docker_postgres_user_result.stdout | default(postgres_user) }}
+        -d {{ docker_postgres_db_result.stdout | default(postgres_db) }}
+        --clean --if-exists
+      register: docker_db_dump
+      changed_when: false
+      no_log: true
+
+    - name: Save Docker database dump to file
+      copy:
+        content: "{{ docker_db_dump.stdout }}"
+        dest: /tmp/wealthpath_migration.sql
+        mode: '0600'
+
+    # Determine destination PostgreSQL (Host)
+    - name: Install PostgreSQL client tools
+      apt:
+        name: postgresql-client
+        state: present
+        update_cache: yes
+
+    - name: Check if host PostgreSQL is installed
+      command: which psql
+      register: host_postgres_check
+      changed_when: false
+      failed_when: false
+
+    - name: Ensure host PostgreSQL server is installed
+      apt:
+        name:
+          - postgresql
+          - postgresql-contrib
+          - python3-psycopg2
+        state: present
+        update_cache: yes
+      when: host_postgres_check.rc != 0
+
+    - name: Start PostgreSQL service
+      systemd:
+        name: postgresql
+        state: started
+        enabled: yes
+      when: host_postgres_check.rc != 0
+
+    - name: Set destination PostgreSQL parameters (Host)
+      set_fact:
+        dest_pg_host: "localhost"
+        dest_pg_port: "5432"
+        dest_pg_user: "{{ postgres_user }}"
+        dest_pg_password: "{{ docker_postgres_password_result.stdout }}"
+        dest_pg_db: "{{ postgres_db }}"
+      no_log: true
+
+    # Run migration (import from dump file)
     - name: Database Migration
       import_tasks: tasks/migrate-db.yml
+      vars:
+        dump_file: /tmp/wealthpath_migration.sql
+        cleanup_dump_file: true
 
     - name: Display migration completion
       debug:
@@ -54,7 +143,6 @@
              ansible-playbook playbook.yml --ask-vault-pass
           
           2. The main playbook will:
-             - Install host PostgreSQL (already done)
+             - Install host PostgreSQL (if not already done)
              - Deploy application with new docker-compose config
              - Connect to host PostgreSQL instead of Docker
-
