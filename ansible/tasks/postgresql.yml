@@ -77,11 +77,19 @@
     backup: yes
   notify: restart postgresql
 
-- name: Configure PostgreSQL to listen on localhost
+- name: Configure PostgreSQL to listen on all interfaces (for Docker access)
   lineinfile:
     path: "/etc/postgresql/{{ postgres_version.stdout }}/main/postgresql.conf"
     regexp: "^#?listen_addresses\\s*="
-    line: "listen_addresses = 'localhost'"
+    line: "listen_addresses = '*'"
+    state: present
+    backup: yes
+  notify: restart postgresql
+
+- name: Allow Docker network connections in pg_hba.conf
+  lineinfile:
+    path: "/etc/postgresql/{{ postgres_version.stdout }}/main/pg_hba.conf"
+    line: "host    all             all             172.17.0.0/16           md5"
     state: present
     backup: yes
   notify: restart postgresql
