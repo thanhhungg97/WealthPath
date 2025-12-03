@@ -33,12 +33,12 @@ func (p *FacebookProvider) Name() string { return "facebook" }
 func (p *FacebookProvider) AuthURL() string {
 	clientID := os.Getenv("FACEBOOK_APP_ID")
 	redirectURI := os.Getenv("FACEBOOK_REDIRECT_URI")
-	
+
 	// Validate required environment variables
 	if clientID == "" || redirectURI == "" {
 		return ""
 	}
-	
+
 	return "https://www.facebook.com/v18.0/dialog/oauth?" +
 		"client_id=" + clientID +
 		"&redirect_uri=" + url.QueryEscape(redirectURI) +
@@ -113,12 +113,12 @@ func (p *GoogleProvider) Name() string { return "google" }
 func (p *GoogleProvider) AuthURL() string {
 	clientID := os.Getenv("GOOGLE_CLIENT_ID")
 	redirectURI := os.Getenv("GOOGLE_REDIRECT_URI")
-	
+
 	// Validate required environment variables
 	if clientID == "" || redirectURI == "" {
 		return ""
 	}
-	
+
 	return "https://accounts.google.com/o/oauth2/v2/auth?" +
 		"client_id=" + clientID +
 		"&redirect_uri=" + url.QueryEscape(redirectURI) +
