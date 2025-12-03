@@ -1,8 +1,13 @@
-import { redirect } from 'next/navigation'
+import { ReactNode } from 'react'
 
-export default function RootLayout() {
-  // Redirect to default locale
-  redirect('/en')
+// Root layout - middleware handles locale redirect
+// This is just a passthrough since middleware redirects to /[locale]
+export default function RootLayout({
+  children,
+}: {
+  children: ReactNode
+}) {
+  return <>{children}</>
 }
 
 
