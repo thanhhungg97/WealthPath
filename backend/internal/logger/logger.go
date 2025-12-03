@@ -11,7 +11,7 @@ var defaultLogger *slog.Logger
 func init() {
 	// Use JSON in production, text for development
 	env := os.Getenv("ENV")
-	
+
 	var handler slog.Handler
 	if env == "production" {
 		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
@@ -22,7 +22,7 @@ func init() {
 			Level: slog.LevelDebug,
 		})
 	}
-	
+
 	defaultLogger = slog.New(handler)
 	slog.SetDefault(defaultLogger)
 }
@@ -53,15 +53,15 @@ func WithUserID(ctx context.Context, userID string) context.Context {
 // FromContext returns a logger with context values
 func FromContext(ctx context.Context) *slog.Logger {
 	l := defaultLogger
-	
+
 	if requestID, ok := ctx.Value(requestIDKey).(string); ok && requestID != "" {
 		l = l.With("request_id", requestID)
 	}
-	
+
 	if userID, ok := ctx.Value(userIDKey).(string); ok && userID != "" {
 		l = l.With("user_id", userID)
 	}
-	
+
 	return l
 }
 
@@ -82,4 +82,3 @@ func Debug(msg string, args ...any) {
 func Warn(msg string, args ...any) {
 	defaultLogger.Warn(msg, args...)
 }
-

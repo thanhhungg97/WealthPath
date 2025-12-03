@@ -183,6 +183,3 @@ func (h *DebtHandler) InterestCalculator(w http.ResponseWriter, r *http.Request)
 
 	respondJSON(w, http.StatusOK, result)
 }
-
-
-

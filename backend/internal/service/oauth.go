@@ -55,7 +55,7 @@ func (p *FacebookProvider) ExchangeCode(code string) (string, error) {
 	if err != nil {
 		return "", ErrOAuthFailed
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var tokenResp struct {
 		AccessToken string `json:"access_token"`
@@ -73,7 +73,7 @@ func (p *FacebookProvider) GetUser(accessToken string) (*OAuthUser, error) {
 	if err != nil {
 		return nil, ErrOAuthFailed
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var fbUser struct {
 		ID      string `json:"id"`
@@ -131,7 +131,7 @@ func (p *GoogleProvider) ExchangeCode(code string) (string, error) {
 	if err != nil {
 		return "", ErrOAuthFailed
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var tokenResp struct {
 		AccessToken string `json:"access_token"`
@@ -150,7 +150,7 @@ func (p *GoogleProvider) GetUser(accessToken string) (*OAuthUser, error) {
 	if err != nil {
 		return nil, ErrOAuthFailed
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, _ := io.ReadAll(resp.Body)
 

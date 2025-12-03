@@ -181,7 +181,7 @@ func (s *DebtService) GetPayoffPlan(ctx context.Context, id uuid.UUID, monthlyPa
 
 func (s *DebtService) CalculateInterest(input InterestCalculatorInput) (*InterestCalculatorResult, error) {
 	monthlyRate := input.InterestRate.Div(decimal.NewFromInt(100)).Div(decimal.NewFromInt(12))
-	
+
 	// Calculate fixed monthly payment using amortization formula
 	// M = P * [r(1+r)^n] / [(1+r)^n - 1]
 	r := monthlyRate.InexactFloat64()
@@ -209,27 +209,27 @@ func (s *DebtService) CalculateInterest(input InterestCalculatorInput) (*Interes
 func calculatePayoffPlan(debt *model.Debt, monthlyPayment decimal.Decimal) *model.PayoffPlan {
 	balance := debt.CurrentBalance
 	monthlyRate := debt.InterestRate.Div(decimal.NewFromInt(100)).Div(decimal.NewFromInt(12))
-	
+
 	totalInterest := decimal.Zero
 	totalPayment := decimal.Zero
 	months := 0
 	maxMonths := 360 // 30 years cap
-	
+
 	amortization := make([]model.AmortizationRow, 0)
 
 	for balance.IsPositive() && months < maxMonths {
 		months++
-		
+
 		interest := balance.Mul(monthlyRate).Round(2)
 		payment := monthlyPayment
-		
+
 		if payment.GreaterThan(balance.Add(interest)) {
 			payment = balance.Add(interest)
 		}
-		
+
 		principal := payment.Sub(interest)
 		balance = balance.Sub(principal)
-		
+
 		totalInterest = totalInterest.Add(interest)
 		totalPayment = totalPayment.Add(payment)
 
@@ -257,6 +257,3 @@ func calculatePayoffPlan(debt *model.Debt, monthlyPayment decimal.Decimal) *mode
 		AmortizationPlan: amortization,
 	}
 }
-
-
-

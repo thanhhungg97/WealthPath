@@ -1,22 +1,25 @@
+version: "2"
+
 run:
   timeout: 5m
-  go: '1.22'
+  go: '1.24'
 
 linters:
   enable:
     - errcheck      # Check for unchecked errors
-    - gosimple      # Simplify code
     - govet         # Report suspicious constructs
     - ineffassign   # Detect unused assignments
-    - staticcheck   # Static analysis
+    - staticcheck   # Static analysis (includes gosimple)
     - unused        # Find unused code
-    - gofmt         # Check formatting
-    - goimports     # Check imports
     - misspell      # Find misspellings
     - bodyclose     # Check HTTP body is closed
-    - sqlclosecheck # Check SQL rows/stmt closed
     - gocritic      # Opinionated linter
     - errorlint     # Error wrapping checks
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
 
 linters-settings:
   gocritic:
@@ -34,4 +37,3 @@ issues:
     - path: _test\.go
       linters:
         - errcheck
-

@@ -27,7 +27,7 @@ func (r *TransactionRepository) Create(ctx context.Context, tx *model.Transactio
 		INSERT INTO transactions (id, user_id, type, amount, currency, category, description, date, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
 		RETURNING created_at, updated_at`
-	
+
 	tx.ID = uuid.New()
 	return r.db.QueryRowxContext(ctx, query,
 		tx.ID, tx.UserID, tx.Type, tx.Amount, tx.Currency, tx.Category, tx.Description, tx.Date,
@@ -55,7 +55,7 @@ func (r *TransactionRepository) List(ctx context.Context, userID uuid.UUID, filt
 		AND ($5::timestamp IS NULL OR date <= $5)
 		ORDER BY date DESC, created_at DESC
 		LIMIT $6 OFFSET $7`
-	
+
 	err := r.db.SelectContext(ctx, &transactions, query,
 		userID, filters.Type, filters.Category, filters.StartDate, filters.EndDate, filters.Limit, filters.Offset,
 	)
@@ -99,7 +99,7 @@ func (r *TransactionRepository) GetMonthlyTotals(ctx context.Context, userID uui
 		WHERE user_id = $1 
 		AND EXTRACT(YEAR FROM date) = $2 
 		AND EXTRACT(MONTH FROM date) = $3`
-	
+
 	var result struct {
 		Income   decimal.Decimal `db:"income"`
 		Expenses decimal.Decimal `db:"expenses"`
@@ -114,7 +114,7 @@ func (r *TransactionRepository) GetExpensesByCategory(ctx context.Context, userI
 		FROM transactions
 		WHERE user_id = $1 AND type = 'expense' AND date >= $2 AND date <= $3
 		GROUP BY category`
-	
+
 	var results []struct {
 		Category string          `db:"category"`
 		Total    decimal.Decimal `db:"total"`
@@ -123,7 +123,7 @@ func (r *TransactionRepository) GetExpensesByCategory(ctx context.Context, userI
 	if err != nil {
 		return nil, err
 	}
-	
+
 	categories := make(map[string]decimal.Decimal)
 	for _, r := range results {
 		categories[r.Category] = r.Total
@@ -136,7 +136,7 @@ func (r *TransactionRepository) GetSpentByCategory(ctx context.Context, userID u
 		SELECT COALESCE(SUM(amount), 0)
 		FROM transactions
 		WHERE user_id = $1 AND type = 'expense' AND category = $2 AND date >= $3 AND date <= $4`
-	
+
 	var spent decimal.Decimal
 	err := r.db.GetContext(ctx, &spent, query, userID, category, startDate, endDate)
 	return spent, err
@@ -159,7 +159,7 @@ func (r *TransactionRepository) GetMonthlyComparison(ctx context.Context, userID
 		WHERE user_id = $1 AND date >= NOW() - INTERVAL '%d months'
 		GROUP BY TO_CHAR(date, 'YYYY-MM')
 		ORDER BY month`
-	
+
 	var results []model.MonthlyComparison
 	err := r.db.SelectContext(ctx, &results, query, userID)
 	return results, err
@@ -173,6 +173,3 @@ type TransactionFilters struct {
 	Limit     int
 	Offset    int
 }
-
-
-

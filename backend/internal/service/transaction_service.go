@@ -20,21 +20,21 @@ func (d *DateString) UnmarshalJSON(b []byte) error {
 	if s == "" || s == "null" {
 		return nil
 	}
-	
+
 	// Try RFC3339 first
 	t, err := time.Parse(time.RFC3339, s)
 	if err == nil {
 		*d = DateString(t)
 		return nil
 	}
-	
+
 	// Try date only format
 	t, err = time.Parse("2006-01-02", s)
 	if err == nil {
 		*d = DateString(t)
 		return nil
 	}
-	
+
 	return err
 }
 
@@ -150,5 +150,3 @@ func (s *TransactionService) Update(ctx context.Context, id uuid.UUID, userID uu
 func (s *TransactionService) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
 	return s.repo.Delete(ctx, id, userID)
 }
-
-

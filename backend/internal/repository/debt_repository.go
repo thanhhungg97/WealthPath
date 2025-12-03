@@ -87,7 +87,7 @@ func (r *DebtRepository) RecordPayment(ctx context.Context, payment *model.DebtP
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Record the payment
 	paymentQuery := `

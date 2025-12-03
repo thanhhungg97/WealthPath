@@ -34,13 +34,13 @@ type ChatRequest struct {
 }
 
 type ChatResponse struct {
-	Message string      `json:"message"`
+	Message string        `json:"message"`
 	Action  *ActionResult `json:"action,omitempty"`
 }
 
 type ActionResult struct {
-	Type   string      `json:"type"` // transaction, budget, savings_goal
-	Data   interface{} `json:"data"`
+	Type string      `json:"type"` // transaction, budget, savings_goal
+	Data interface{} `json:"data"`
 }
 
 type OpenAIRequest struct {
@@ -62,8 +62,8 @@ type OpenAIResponse struct {
 }
 
 type ParsedIntent struct {
-	Action      string  `json:"action"`      // add_transaction, add_budget, add_savings_goal, query, unknown
-	Type        string  `json:"type"`        // income/expense for transactions
+	Action      string  `json:"action"` // add_transaction, add_budget, add_savings_goal, query, unknown
+	Type        string  `json:"type"`   // income/expense for transactions
 	Amount      float64 `json:"amount"`
 	Category    string  `json:"category"`
 	Description string  `json:"description"`
@@ -145,7 +145,7 @@ func (s *AIService) parseIntent(apiKey, message string) (*ParsedIntent, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, _ := io.ReadAll(resp.Body)
 
@@ -257,5 +257,3 @@ func (s *AIService) addSavingsGoal(ctx context.Context, userID uuid.UUID, intent
 		Data: goal,
 	}, nil
 }
-
-

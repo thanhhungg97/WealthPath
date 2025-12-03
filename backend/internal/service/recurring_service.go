@@ -24,26 +24,26 @@ func NewRecurringService(recurringRepo *repository.RecurringRepository, transact
 }
 
 type CreateRecurringInput struct {
-	Type        model.TransactionType      `json:"type"`
-	Amount      decimal.Decimal            `json:"amount"`
-	Currency    string                     `json:"currency"`
-	Category    string                     `json:"category"`
-	Description string                     `json:"description"`
-	Frequency   model.RecurringFrequency   `json:"frequency"`
-	StartDate   time.Time                  `json:"startDate"`
-	EndDate     *time.Time                 `json:"endDate"`
+	Type        model.TransactionType    `json:"type"`
+	Amount      decimal.Decimal          `json:"amount"`
+	Currency    string                   `json:"currency"`
+	Category    string                   `json:"category"`
+	Description string                   `json:"description"`
+	Frequency   model.RecurringFrequency `json:"frequency"`
+	StartDate   time.Time                `json:"startDate"`
+	EndDate     *time.Time               `json:"endDate"`
 }
 
 type UpdateRecurringInput struct {
-	Type        *model.TransactionType     `json:"type"`
-	Amount      *decimal.Decimal           `json:"amount"`
-	Currency    *string                    `json:"currency"`
-	Category    *string                    `json:"category"`
-	Description *string                    `json:"description"`
-	Frequency   *model.RecurringFrequency  `json:"frequency"`
-	StartDate   *time.Time                 `json:"startDate"`
-	EndDate     *time.Time                 `json:"endDate"`
-	IsActive    *bool                      `json:"isActive"`
+	Type        *model.TransactionType    `json:"type"`
+	Amount      *decimal.Decimal          `json:"amount"`
+	Currency    *string                   `json:"currency"`
+	Category    *string                   `json:"category"`
+	Description *string                   `json:"description"`
+	Frequency   *model.RecurringFrequency `json:"frequency"`
+	StartDate   *time.Time                `json:"startDate"`
+	EndDate     *time.Time                `json:"endDate"`
+	IsActive    *bool                     `json:"isActive"`
 }
 
 func (s *RecurringService) Create(ctx context.Context, userID uuid.UUID, input CreateRecurringInput) (*model.RecurringTransaction, error) {
@@ -245,4 +245,3 @@ func calculateNextOccurrence(from time.Time, frequency model.RecurringFrequency)
 		return from.AddDate(0, 1, 0) // Default to monthly
 	}
 }
-

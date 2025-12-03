@@ -26,7 +26,7 @@ func (r *SavingsGoalRepository) Create(ctx context.Context, goal *model.SavingsG
 		INSERT INTO savings_goals (id, user_id, name, target_amount, current_amount, currency, target_date, color, icon, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
 		RETURNING created_at, updated_at`
-	
+
 	goal.ID = uuid.New()
 	if goal.CurrentAmount.IsZero() {
 		goal.CurrentAmount = decimal.Zero
@@ -98,6 +98,3 @@ func (r *SavingsGoalRepository) GetTotalSavings(ctx context.Context, userID uuid
 	err := r.db.GetContext(ctx, &total, query, userID)
 	return total, err
 }
-
-
-

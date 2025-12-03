@@ -113,6 +113,3 @@ func (s *SavingsGoalService) Contribute(ctx context.Context, id uuid.UUID, userI
 	}
 	return s.repo.GetByID(ctx, id)
 }
-
-
-

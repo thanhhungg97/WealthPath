@@ -48,13 +48,13 @@ func (m *MockTransactionRepository) Delete(ctx context.Context, id uuid.UUID) er
 func TestCreateTransaction_Success(t *testing.T) {
 	// This is an example test structure
 	// TODO: Wire up with actual repository interface
-	
+
 	ctx := context.Background()
 	userID := uuid.New()
-	
+
 	dateStr := DateString{}
 	_ = dateStr.UnmarshalJSON([]byte(`"` + time.Now().Format("2006-01-02") + `"`))
-	
+
 	input := CreateTransactionInput{
 		Type:        "expense",
 		Amount:      decimal.NewFromFloat(100.50),
@@ -68,7 +68,7 @@ func TestCreateTransaction_Success(t *testing.T) {
 	assert.Equal(t, "expense", string(input.Type))
 	assert.True(t, input.Amount.GreaterThan(decimal.Zero))
 	assert.NotEmpty(t, input.Category)
-	
+
 	_ = ctx
 	_ = userID
 }
@@ -120,4 +120,3 @@ func TestTransactionType_Validation(t *testing.T) {
 		})
 	}
 }
-

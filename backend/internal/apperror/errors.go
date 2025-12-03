@@ -8,13 +8,13 @@ import (
 
 // Sentinel errors for common cases
 var (
-	ErrNotFound          = errors.New("resource not found")
-	ErrUnauthorized      = errors.New("unauthorized")
-	ErrForbidden         = errors.New("forbidden")
-	ErrBadRequest        = errors.New("bad request")
-	ErrConflict          = errors.New("conflict")
-	ErrInternal          = errors.New("internal server error")
-	ErrValidation        = errors.New("validation error")
+	ErrNotFound           = errors.New("resource not found")
+	ErrUnauthorized       = errors.New("unauthorized")
+	ErrForbidden          = errors.New("forbidden")
+	ErrBadRequest         = errors.New("bad request")
+	ErrConflict           = errors.New("conflict")
+	ErrInternal           = errors.New("internal server error")
+	ErrValidation         = errors.New("validation error")
 	ErrInvalidCredentials = errors.New("invalid credentials")
 )
 
@@ -142,4 +142,3 @@ func GetMessage(err error) string {
 	}
 	return err.Error()
 }
-

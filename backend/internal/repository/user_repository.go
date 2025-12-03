@@ -26,9 +26,9 @@ func (r *UserRepository) Create(ctx context.Context, user *model.User) error {
 		INSERT INTO users (id, email, password_hash, name, currency, oauth_provider, oauth_id, avatar_url, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
 		RETURNING created_at, updated_at`
-	
+
 	user.ID = uuid.New()
-	return r.db.QueryRowxContext(ctx, query, 
+	return r.db.QueryRowxContext(ctx, query,
 		user.ID, user.Email, user.PasswordHash, user.Name, user.Currency,
 		user.OAuthProvider, user.OAuthID, user.AvatarURL,
 	).Scan(&user.CreatedAt, &user.UpdatedAt)
@@ -60,8 +60,8 @@ func (r *UserRepository) Update(ctx context.Context, user *model.User) error {
 		SET name = $2, currency = $3, oauth_provider = $4, oauth_id = $5, avatar_url = $6, updated_at = NOW()
 		WHERE id = $1
 		RETURNING updated_at`
-	return r.db.QueryRowxContext(ctx, query, 
-		user.ID, user.Name, user.Currency, 
+	return r.db.QueryRowxContext(ctx, query,
+		user.ID, user.Name, user.Currency,
 		user.OAuthProvider, user.OAuthID, user.AvatarURL,
 	).Scan(&user.UpdatedAt)
 }
@@ -82,5 +82,3 @@ func (r *UserRepository) EmailExists(ctx context.Context, email string) (bool, e
 	err := r.db.GetContext(ctx, &exists, query, email)
 	return exists, err
 }
-
-
