@@ -53,7 +53,7 @@
 
     - name: Add Docker repository
       apt_repository:
-        repo: "deb https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        repo: "deb https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
         state: present
 
     - name: Install Docker
@@ -109,7 +109,7 @@
 
     - name: Set public IP fact
       set_fact:
-        server_ip: "{{ public_ip_result.content | default(ansible_default_ipv4.address) }}"
+        server_ip: "{{ public_ip_result.content | default(ansible_facts['default_ipv4']['address']) }}"
 
     - name: Generate sslip.io domain
       set_fact:
@@ -188,14 +188,22 @@
     # Health Checks
     # ============================================
     - name: Wait for backend to be ready
-      uri:
-        url: "http://localhost:8080/api/health"
-        status_code: 200
+      command: docker exec wealthpath-backend-1 wget -qO- http://localhost:8080/api/health
       register: backend_health
       retries: 30
       delay: 5
-      until: backend_health.status == 200
-      delegate_to: "{{ inventory_hostname }}"
+      until: backend_health.rc == 0
+      changed_when: false
+
+    - name: Wait for Caddy to be ready
+      uri:
+        url: "http://localhost/api/health"
+        status_code: [200, 308]
+      register: caddy_health
+      retries: 10
+      delay: 3
+      until: caddy_health.status in [200, 308]
+      ignore_errors: yes
 
     - name: Display deployment info
       debug:
