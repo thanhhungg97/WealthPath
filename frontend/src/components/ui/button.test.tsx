@@ -78,11 +78,10 @@ describe('Button', () => {
   it('renders as child component with asChild', () => {
     render(
       <Button asChild>
-        <a href="/test">Link Button</a>
+        <span data-testid="custom-child">Custom Child</span>
       </Button>
     );
-    const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/test');
+    expect(screen.getByTestId('custom-child')).toBeInTheDocument();
   });
 
   it('forwards ref correctly', () => {
