@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -14,17 +15,34 @@ import (
 	"github.com/wealthpath/backend/internal/repository"
 )
 
+// Service-level errors for authentication and user management.
 var (
-	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrEmailTaken         = errors.New("email already taken")
-	ErrOAuthFailed        = errors.New("OAuth authentication failed")
+	ErrInvalidCredentials  = errors.New("invalid credentials")
+	ErrEmailTaken          = errors.New("email already taken")
+	ErrOAuthFailed         = errors.New("OAuth authentication failed")
+	ErrUnsupportedCurrency = errors.New("unsupported currency")
 )
 
-type UserService struct {
-	repo *repository.UserRepository
+// UserRepositoryInterface defines the contract for user data access.
+// Implementations must be safe for concurrent use.
+type UserRepositoryInterface interface {
+	Create(ctx context.Context, user *model.User) error
+	GetByEmail(ctx context.Context, email string) (*model.User, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*model.User, error)
+	Update(ctx context.Context, user *model.User) error
+	EmailExists(ctx context.Context, email string) (bool, error)
+	UpdateLastLogin(ctx context.Context, id uuid.UUID) error
+	GetOrCreateByOAuth(ctx context.Context, user *model.User) (*model.User, error)
+	GetByOAuth(ctx context.Context, provider, oauthID string) (*model.User, error)
 }
 
-func NewUserService(repo *repository.UserRepository) *UserService {
+// UserService handles business logic for user authentication and profile management.
+type UserService struct {
+	repo UserRepositoryInterface
+}
+
+// NewUserService creates a new UserService with the given repository.
+func NewUserService(repo UserRepositoryInterface) *UserService {
 	return &UserService{repo: repo}
 }
 
@@ -45,10 +63,12 @@ type AuthResponse struct {
 	User  *model.User `json:"user"`
 }
 
+// Register creates a new user account with email and password.
+// Returns ErrEmailTaken if the email is already registered.
 func (s *UserService) Register(ctx context.Context, input RegisterInput) (*AuthResponse, error) {
 	exists, err := s.repo.EmailExists(ctx, input.Email)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("checking email existence: %w", err)
 	}
 	if exists {
 		return nil, ErrEmailTaken
@@ -56,7 +76,7 @@ func (s *UserService) Register(ctx context.Context, input RegisterInput) (*AuthR
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("hashing password: %w", err)
 	}
 
 	hashStr := string(hash)
@@ -71,24 +91,26 @@ func (s *UserService) Register(ctx context.Context, input RegisterInput) (*AuthR
 	}
 
 	if err := s.repo.Create(ctx, user); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating user: %w", err)
 	}
 
 	token, err := generateToken(user.ID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("generating token: %w", err)
 	}
 
 	return &AuthResponse{Token: token, User: user}, nil
 }
 
+// Login authenticates a user with email and password.
+// Returns ErrInvalidCredentials if the credentials are incorrect.
 func (s *UserService) Login(ctx context.Context, input LoginInput) (*AuthResponse, error) {
 	user, err := s.repo.GetByEmail(ctx, input.Email)
 	if err != nil {
 		if errors.Is(err, repository.ErrUserNotFound) {
 			return nil, ErrInvalidCredentials
 		}
-		return nil, err
+		return nil, fmt.Errorf("fetching user by email: %w", err)
 	}
 
 	if user.PasswordHash == nil {
@@ -101,14 +123,19 @@ func (s *UserService) Login(ctx context.Context, input LoginInput) (*AuthRespons
 
 	token, err := generateToken(user.ID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("generating token: %w", err)
 	}
 
 	return &AuthResponse{Token: token, User: user}, nil
 }
 
+// GetByID retrieves a user by their ID.
 func (s *UserService) GetByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
-	return s.repo.GetByID(ctx, id)
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("getting user %s: %w", id, err)
+	}
+	return user, nil
 }
 
 // Supported currencies
@@ -119,10 +146,12 @@ type UpdateSettingsInput struct {
 	Currency *string `json:"currency"`
 }
 
+// UpdateSettings updates user profile settings (name, currency).
+// Returns ErrUnsupportedCurrency if the currency is not in SupportedCurrencies.
 func (s *UserService) UpdateSettings(ctx context.Context, userID uuid.UUID, input UpdateSettingsInput) (*model.User, error) {
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetching user %s for update: %w", userID, err)
 	}
 
 	if input.Name != nil && *input.Name != "" {
@@ -130,27 +159,36 @@ func (s *UserService) UpdateSettings(ctx context.Context, userID uuid.UUID, inpu
 	}
 
 	if input.Currency != nil && *input.Currency != "" {
-		// Validate currency
-		valid := false
-		for _, c := range SupportedCurrencies {
-			if c == *input.Currency {
-				valid = true
-				break
-			}
-		}
-		if !valid {
-			return nil, errors.New("unsupported currency")
+		if !isValidCurrency(*input.Currency) {
+			return nil, ErrUnsupportedCurrency
 		}
 		user.Currency = *input.Currency
 	}
 
 	if err := s.repo.Update(ctx, user); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("updating user %s: %w", userID, err)
 	}
 
 	return user, nil
 }
 
+// isValidCurrency checks if the currency is supported.
+func isValidCurrency(currency string) bool {
+	for _, c := range SupportedCurrencies {
+		if c == currency {
+			return true
+		}
+	}
+	return false
+}
+
+// GenerateTokenForTest generates a JWT token for testing purposes.
+func GenerateTokenForTest() (string, error) {
+	return generateToken(uuid.New())
+}
+
+// generateToken creates a signed JWT token for the given user ID.
+// Token expires in 7 days.
 func generateToken(userID uuid.UUID) (string, error) {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
@@ -167,6 +205,8 @@ func generateToken(userID uuid.UUID) (string, error) {
 	return token.SignedString([]byte(secret))
 }
 
+// ValidateToken parses and validates a JWT token string.
+// Returns the user ID if valid, or an error if invalid.
 func ValidateToken(tokenString string) (uuid.UUID, error) {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {

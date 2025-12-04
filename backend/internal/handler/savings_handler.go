@@ -10,10 +10,10 @@ import (
 )
 
 type SavingsGoalHandler struct {
-	service *service.SavingsGoalService
+	service SavingsGoalServiceInterface
 }
 
-func NewSavingsGoalHandler(service *service.SavingsGoalService) *SavingsGoalHandler {
+func NewSavingsGoalHandler(service SavingsGoalServiceInterface) *SavingsGoalHandler {
 	return &SavingsGoalHandler{service: service}
 }
 

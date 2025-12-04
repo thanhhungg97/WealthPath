@@ -1,7 +1,10 @@
+// Package service implements the business logic layer for the WealthPath application.
+// It contains use cases that orchestrate domain operations and enforce business rules.
 package service
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -12,7 +15,7 @@ import (
 	"github.com/wealthpath/backend/internal/repository"
 )
 
-// DateString handles both "2006-01-02" and RFC3339 date formats
+// DateString handles both "2006-01-02" and RFC3339 date formats for JSON unmarshalling.
 type DateString time.Time
 
 func (d *DateString) UnmarshalJSON(b []byte) error {
@@ -42,11 +45,25 @@ func (d DateString) Time() time.Time {
 	return time.Time(d)
 }
 
-type TransactionService struct {
-	repo *repository.TransactionRepository
+// TransactionRepositoryInterface defines the contract for transaction data access.
+// Implementations must be safe for concurrent use.
+type TransactionRepositoryInterface interface {
+	Create(ctx context.Context, tx *model.Transaction) error
+	GetByID(ctx context.Context, id uuid.UUID) (*model.Transaction, error)
+	List(ctx context.Context, userID uuid.UUID, filters repository.TransactionFilters) ([]model.Transaction, error)
+	Update(ctx context.Context, tx *model.Transaction) error
+	Delete(ctx context.Context, id, userID uuid.UUID) error
 }
 
-func NewTransactionService(repo *repository.TransactionRepository) *TransactionService {
+// TransactionService handles business logic for financial transactions.
+// It enforces validation rules and coordinates repository operations.
+type TransactionService struct {
+	repo TransactionRepositoryInterface
+}
+
+// NewTransactionService creates a new TransactionService with the given repository.
+// The repository must not be nil.
+func NewTransactionService(repo TransactionRepositoryInterface) *TransactionService {
 	return &TransactionService{repo: repo}
 }
 
@@ -77,6 +94,8 @@ type ListTransactionsInput struct {
 	PageSize  int        `json:"pageSize"`
 }
 
+// Create validates and persists a new transaction for the given user.
+// It sets default currency to USD if not specified.
 func (s *TransactionService) Create(ctx context.Context, userID uuid.UUID, input CreateTransactionInput) (*model.Transaction, error) {
 	tx := &model.Transaction{
 		UserID:      userID,
@@ -93,16 +112,24 @@ func (s *TransactionService) Create(ctx context.Context, userID uuid.UUID, input
 	}
 
 	if err := s.repo.Create(ctx, tx); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating transaction: %w", err)
 	}
 
 	return tx, nil
 }
 
+// Get retrieves a transaction by its ID.
+// Returns ErrTransactionNotFound if the transaction does not exist.
 func (s *TransactionService) Get(ctx context.Context, id uuid.UUID) (*model.Transaction, error) {
-	return s.repo.GetByID(ctx, id)
+	tx, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("getting transaction %s: %w", id, err)
+	}
+	return tx, nil
 }
 
+// List retrieves transactions for a user with optional filters and pagination.
+// PageSize is capped at 100 and defaults to 20.
 func (s *TransactionService) List(ctx context.Context, userID uuid.UUID, input ListTransactionsInput) ([]model.Transaction, error) {
 	if input.PageSize <= 0 {
 		input.PageSize = 20
@@ -120,13 +147,19 @@ func (s *TransactionService) List(ctx context.Context, userID uuid.UUID, input L
 		Offset:    input.Page * input.PageSize,
 	}
 
-	return s.repo.List(ctx, userID, filters)
+	txs, err := s.repo.List(ctx, userID, filters)
+	if err != nil {
+		return nil, fmt.Errorf("listing transactions for user %s: %w", userID, err)
+	}
+	return txs, nil
 }
 
+// Update modifies an existing transaction.
+// Returns ErrTransactionNotFound if the transaction does not exist or belongs to another user.
 func (s *TransactionService) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, input UpdateTransactionInput) (*model.Transaction, error) {
 	tx, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetching transaction %s for update: %w", id, err)
 	}
 
 	if tx.UserID != userID {
@@ -141,12 +174,17 @@ func (s *TransactionService) Update(ctx context.Context, id uuid.UUID, userID uu
 	tx.Date = input.Date.Time()
 
 	if err := s.repo.Update(ctx, tx); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("updating transaction %s: %w", id, err)
 	}
 
 	return tx, nil
 }
 
+// Delete removes a transaction by ID for the given user.
+// Returns ErrTransactionNotFound if the transaction does not exist or belongs to another user.
 func (s *TransactionService) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
-	return s.repo.Delete(ctx, id, userID)
+	if err := s.repo.Delete(ctx, id, userID); err != nil {
+		return fmt.Errorf("deleting transaction %s: %w", id, err)
+	}
+	return nil
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"time"
 
@@ -12,11 +13,24 @@ import (
 	"github.com/wealthpath/backend/internal/repository"
 )
 
-type DebtService struct {
-	repo *repository.DebtRepository
+// DebtRepositoryInterface defines the contract for debt data access.
+// Implementations must be safe for concurrent use.
+type DebtRepositoryInterface interface {
+	Create(ctx context.Context, debt *model.Debt) error
+	GetByID(ctx context.Context, id uuid.UUID) (*model.Debt, error)
+	List(ctx context.Context, userID uuid.UUID) ([]model.Debt, error)
+	Update(ctx context.Context, debt *model.Debt) error
+	Delete(ctx context.Context, id, userID uuid.UUID) error
+	RecordPayment(ctx context.Context, payment *model.DebtPayment) error
 }
 
-func NewDebtService(repo *repository.DebtRepository) *DebtService {
+// DebtService handles business logic for debt management and payoff calculations.
+type DebtService struct {
+	repo DebtRepositoryInterface
+}
+
+// NewDebtService creates a new DebtService with the given repository.
+func NewDebtService(repo DebtRepositoryInterface) *DebtService {
 	return &DebtService{repo: repo}
 }
 
@@ -63,6 +77,8 @@ type InterestCalculatorResult struct {
 	PayoffDate     time.Time       `json:"payoffDate"`
 }
 
+// Create creates a new debt record for the given user.
+// Defaults currency to USD and sets current balance to original amount if not specified.
 func (s *DebtService) Create(ctx context.Context, userID uuid.UUID, input CreateDebtInput) (*model.Debt, error) {
 	debt := &model.Debt{
 		UserID:         userID,
@@ -85,24 +101,36 @@ func (s *DebtService) Create(ctx context.Context, userID uuid.UUID, input Create
 	}
 
 	if err := s.repo.Create(ctx, debt); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating debt: %w", err)
 	}
 
 	return debt, nil
 }
 
+// Get retrieves a debt by its ID.
 func (s *DebtService) Get(ctx context.Context, id uuid.UUID) (*model.Debt, error) {
-	return s.repo.GetByID(ctx, id)
+	debt, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("getting debt %s: %w", id, err)
+	}
+	return debt, nil
 }
 
+// List retrieves all debts for a user.
 func (s *DebtService) List(ctx context.Context, userID uuid.UUID) ([]model.Debt, error) {
-	return s.repo.List(ctx, userID)
+	debts, err := s.repo.List(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("listing debts for user %s: %w", userID, err)
+	}
+	return debts, nil
 }
 
+// Update modifies an existing debt.
+// Returns ErrDebtNotFound if the debt does not exist or belongs to another user.
 func (s *DebtService) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, input UpdateDebtInput) (*model.Debt, error) {
 	debt, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetching debt %s for update: %w", id, err)
 	}
 
 	if debt.UserID != userID {
@@ -120,20 +148,26 @@ func (s *DebtService) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID
 	debt.StartDate = input.StartDate
 
 	if err := s.repo.Update(ctx, debt); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("updating debt %s: %w", id, err)
 	}
 
 	return debt, nil
 }
 
+// Delete removes a debt by ID for the given user.
 func (s *DebtService) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
-	return s.repo.Delete(ctx, id, userID)
+	if err := s.repo.Delete(ctx, id, userID); err != nil {
+		return fmt.Errorf("deleting debt %s: %w", id, err)
+	}
+	return nil
 }
 
+// MakePayment records a payment against a debt, splitting it into principal and interest.
+// The interest portion is calculated using the monthly rate.
 func (s *DebtService) MakePayment(ctx context.Context, debtID uuid.UUID, userID uuid.UUID, input MakePaymentInput) (*model.Debt, error) {
 	debt, err := s.repo.GetByID(ctx, debtID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetching debt %s for payment: %w", debtID, err)
 	}
 
 	if debt.UserID != userID {
@@ -159,16 +193,18 @@ func (s *DebtService) MakePayment(ctx context.Context, debtID uuid.UUID, userID 
 	}
 
 	if err := s.repo.RecordPayment(ctx, payment); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("recording payment for debt %s: %w", debtID, err)
 	}
 
 	return s.repo.GetByID(ctx, debtID)
 }
 
+// GetPayoffPlan calculates a debt payoff plan based on the monthly payment amount.
+// If monthlyPayment is zero, uses the minimum payment from the debt.
 func (s *DebtService) GetPayoffPlan(ctx context.Context, id uuid.UUID, monthlyPayment decimal.Decimal) (*model.PayoffPlan, error) {
 	debt, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetching debt %s for payoff plan: %w", id, err)
 	}
 
 	if monthlyPayment.IsZero() {
@@ -179,6 +215,8 @@ func (s *DebtService) GetPayoffPlan(ctx context.Context, id uuid.UUID, monthlyPa
 	return plan, nil
 }
 
+// CalculateInterest computes loan amortization details using the standard formula.
+// Returns monthly payment, total payment, total interest, and payoff date.
 func (s *DebtService) CalculateInterest(input InterestCalculatorInput) (*InterestCalculatorResult, error) {
 	monthlyRate := input.InterestRate.Div(decimal.NewFromInt(100)).Div(decimal.NewFromInt(12))
 

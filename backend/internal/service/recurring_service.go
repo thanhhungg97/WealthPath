@@ -3,20 +3,48 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/wealthpath/backend/internal/model"
-	"github.com/wealthpath/backend/internal/repository"
 )
 
-type RecurringService struct {
-	recurringRepo   *repository.RecurringRepository
-	transactionRepo *repository.TransactionRepository
+// Service-level errors for recurring transactions.
+var (
+	ErrInvalidAmount     = errors.New("amount must be greater than zero")
+	ErrInvalidType       = errors.New("type must be 'income' or 'expense'")
+	ErrInvalidFrequency  = errors.New("invalid frequency")
+	ErrRecurringNotFound = errors.New("recurring transaction not found")
+)
+
+// RecurringRepositoryInterface defines the contract for recurring transaction data access.
+// Implementations must be safe for concurrent use.
+type RecurringRepositoryInterface interface {
+	Create(ctx context.Context, rt *model.RecurringTransaction) error
+	GetByID(ctx context.Context, id uuid.UUID) (*model.RecurringTransaction, error)
+	GetByUserID(ctx context.Context, userID uuid.UUID) ([]model.RecurringTransaction, error)
+	Update(ctx context.Context, rt *model.RecurringTransaction) error
+	Delete(ctx context.Context, id uuid.UUID) error
+	GetUpcoming(ctx context.Context, userID uuid.UUID, limit int) ([]model.UpcomingBill, error)
+	GetDueTransactions(ctx context.Context, now time.Time) ([]model.RecurringTransaction, error)
+	UpdateLastGenerated(ctx context.Context, id uuid.UUID, lastGenerated, nextOccurrence time.Time) error
 }
 
-func NewRecurringService(recurringRepo *repository.RecurringRepository, transactionRepo *repository.TransactionRepository) *RecurringService {
+// TransactionCreator provides transaction creation capability for recurring processing.
+type TransactionCreator interface {
+	Create(ctx context.Context, tx *model.Transaction) error
+}
+
+// RecurringService handles business logic for recurring transactions and bill scheduling.
+type RecurringService struct {
+	recurringRepo   RecurringRepositoryInterface
+	transactionRepo TransactionCreator
+}
+
+// NewRecurringService creates a new RecurringService with the given repositories.
+func NewRecurringService(recurringRepo RecurringRepositoryInterface, transactionRepo TransactionCreator) *RecurringService {
 	return &RecurringService{
 		recurringRepo:   recurringRepo,
 		transactionRepo: transactionRepo,
@@ -46,17 +74,19 @@ type UpdateRecurringInput struct {
 	IsActive    *bool                     `json:"isActive"`
 }
 
+// Create creates a new recurring transaction for the given user.
+// Validates amount, type, and frequency before creation.
 func (s *RecurringService) Create(ctx context.Context, userID uuid.UUID, input CreateRecurringInput) (*model.RecurringTransaction, error) {
 	if input.Amount.LessThanOrEqual(decimal.Zero) {
-		return nil, errors.New("amount must be greater than zero")
+		return nil, ErrInvalidAmount
 	}
 
 	if input.Type != model.TransactionTypeIncome && input.Type != model.TransactionTypeExpense {
-		return nil, errors.New("type must be 'income' or 'expense'")
+		return nil, ErrInvalidType
 	}
 
 	if !isValidFrequency(input.Frequency) {
-		return nil, errors.New("invalid frequency")
+		return nil, ErrInvalidFrequency
 	}
 
 	rt := &model.RecurringTransaction{
@@ -78,34 +108,42 @@ func (s *RecurringService) Create(ctx context.Context, userID uuid.UUID, input C
 	}
 
 	if err := s.recurringRepo.Create(ctx, rt); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating recurring transaction: %w", err)
 	}
 
 	return rt, nil
 }
 
+// GetByUserID retrieves all recurring transactions for a user.
 func (s *RecurringService) GetByUserID(ctx context.Context, userID uuid.UUID) ([]model.RecurringTransaction, error) {
-	return s.recurringRepo.GetByUserID(ctx, userID)
+	rts, err := s.recurringRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("listing recurring transactions for user %s: %w", userID, err)
+	}
+	return rts, nil
 }
 
+// GetByID retrieves a recurring transaction by ID, ensuring it belongs to the user.
 func (s *RecurringService) GetByID(ctx context.Context, userID, id uuid.UUID) (*model.RecurringTransaction, error) {
 	rt, err := s.recurringRepo.GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting recurring transaction %s: %w", id, err)
 	}
 	if rt.UserID != userID {
-		return nil, errors.New("recurring transaction not found")
+		return nil, ErrRecurringNotFound
 	}
 	return rt, nil
 }
 
+// Update modifies an existing recurring transaction.
+// Returns ErrRecurringNotFound if the transaction does not exist or belongs to another user.
 func (s *RecurringService) Update(ctx context.Context, userID, id uuid.UUID, input UpdateRecurringInput) (*model.RecurringTransaction, error) {
 	rt, err := s.recurringRepo.GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetching recurring transaction %s for update: %w", id, err)
 	}
 	if rt.UserID != userID {
-		return nil, errors.New("recurring transaction not found")
+		return nil, ErrRecurringNotFound
 	}
 
 	if input.Type != nil {
@@ -113,7 +151,7 @@ func (s *RecurringService) Update(ctx context.Context, userID, id uuid.UUID, inp
 	}
 	if input.Amount != nil {
 		if input.Amount.LessThanOrEqual(decimal.Zero) {
-			return nil, errors.New("amount must be greater than zero")
+			return nil, ErrInvalidAmount
 		}
 		rt.Amount = *input.Amount
 	}
@@ -128,10 +166,9 @@ func (s *RecurringService) Update(ctx context.Context, userID, id uuid.UUID, inp
 	}
 	if input.Frequency != nil {
 		if !isValidFrequency(*input.Frequency) {
-			return nil, errors.New("invalid frequency")
+			return nil, ErrInvalidFrequency
 		}
 		rt.Frequency = *input.Frequency
-		// Recalculate next occurrence when frequency changes
 		rt.NextOccurrence = calculateNextOccurrence(rt.StartDate, *input.Frequency)
 	}
 	if input.StartDate != nil {
@@ -146,52 +183,62 @@ func (s *RecurringService) Update(ctx context.Context, userID, id uuid.UUID, inp
 	}
 
 	if err := s.recurringRepo.Update(ctx, rt); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("updating recurring transaction %s: %w", id, err)
 	}
 
 	return rt, nil
 }
 
+// Delete removes a recurring transaction by ID for the given user.
 func (s *RecurringService) Delete(ctx context.Context, userID, id uuid.UUID) error {
 	rt, err := s.recurringRepo.GetByID(ctx, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("fetching recurring transaction %s for deletion: %w", id, err)
 	}
 	if rt.UserID != userID {
-		return errors.New("recurring transaction not found")
+		return ErrRecurringNotFound
 	}
-	return s.recurringRepo.Delete(ctx, id)
+	if err := s.recurringRepo.Delete(ctx, id); err != nil {
+		return fmt.Errorf("deleting recurring transaction %s: %w", id, err)
+	}
+	return nil
 }
 
+// Pause deactivates a recurring transaction.
 func (s *RecurringService) Pause(ctx context.Context, userID, id uuid.UUID) (*model.RecurringTransaction, error) {
 	isActive := false
 	return s.Update(ctx, userID, id, UpdateRecurringInput{IsActive: &isActive})
 }
 
+// Resume reactivates a paused recurring transaction.
 func (s *RecurringService) Resume(ctx context.Context, userID, id uuid.UUID) (*model.RecurringTransaction, error) {
 	isActive := true
 	return s.Update(ctx, userID, id, UpdateRecurringInput{IsActive: &isActive})
 }
 
+// GetUpcoming retrieves upcoming bills for a user, limited to the specified count.
 func (s *RecurringService) GetUpcoming(ctx context.Context, userID uuid.UUID, limit int) ([]model.UpcomingBill, error) {
 	if limit <= 0 {
 		limit = 5
 	}
-	return s.recurringRepo.GetUpcoming(ctx, userID, limit)
+	bills, err := s.recurringRepo.GetUpcoming(ctx, userID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("getting upcoming bills for user %s: %w", userID, err)
+	}
+	return bills, nil
 }
 
-// ProcessDueTransactions generates transactions for all due recurring items
-// This should be called by a cron job
+// ProcessDueTransactions generates transactions for all due recurring items.
+// This should be called by a cron job. Returns the count of processed items.
 func (s *RecurringService) ProcessDueTransactions(ctx context.Context) (int, error) {
 	now := time.Now()
 	dueItems, err := s.recurringRepo.GetDueTransactions(ctx, now)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("fetching due transactions: %w", err)
 	}
 
 	count := 0
 	for _, rt := range dueItems {
-		// Generate the transaction
 		tx := &model.Transaction{
 			UserID:      rt.UserID,
 			Type:        rt.Type,
@@ -206,10 +253,8 @@ func (s *RecurringService) ProcessDueTransactions(ctx context.Context) (int, err
 			continue // Log error but continue processing
 		}
 
-		// Calculate next occurrence
 		nextOccurrence := calculateNextOccurrence(rt.NextOccurrence, rt.Frequency)
 
-		// Update the recurring transaction
 		if err := s.recurringRepo.UpdateLastGenerated(ctx, rt.ID, now, nextOccurrence); err != nil {
 			continue
 		}
@@ -220,6 +265,7 @@ func (s *RecurringService) ProcessDueTransactions(ctx context.Context) (int, err
 	return count, nil
 }
 
+// isValidFrequency checks if the given frequency is a supported value.
 func isValidFrequency(f model.RecurringFrequency) bool {
 	switch f {
 	case model.FrequencyDaily, model.FrequencyWeekly, model.FrequencyBiweekly,
@@ -229,6 +275,7 @@ func isValidFrequency(f model.RecurringFrequency) bool {
 	return false
 }
 
+// calculateNextOccurrence computes the next occurrence date based on frequency.
 func calculateNextOccurrence(from time.Time, frequency model.RecurringFrequency) time.Time {
 	switch frequency {
 	case model.FrequencyDaily:

@@ -15,12 +15,15 @@ import (
 	"github.com/wealthpath/backend/internal/model"
 )
 
+// AIService handles natural language processing for financial actions.
+// It uses OpenAI to parse user messages and execute corresponding operations.
 type AIService struct {
 	transactionService *TransactionService
 	budgetService      *BudgetService
 	savingsService     *SavingsGoalService
 }
 
+// NewAIService creates a new AIService with the required service dependencies.
 func NewAIService(ts *TransactionService, bs *BudgetService, ss *SavingsGoalService) *AIService {
 	return &AIService{
 		transactionService: ts,
@@ -29,30 +32,36 @@ func NewAIService(ts *TransactionService, bs *BudgetService, ss *SavingsGoalServ
 	}
 }
 
+// ChatRequest represents an incoming chat message from the user.
 type ChatRequest struct {
 	Message string `json:"message"`
 }
 
+// ChatResponse contains the AI response and any executed action.
 type ChatResponse struct {
 	Message string        `json:"message"`
 	Action  *ActionResult `json:"action,omitempty"`
 }
 
+// ActionResult represents the result of an executed financial action.
 type ActionResult struct {
 	Type string      `json:"type"` // transaction, budget, savings_goal
 	Data interface{} `json:"data"`
 }
 
+// OpenAIRequest represents the request payload for OpenAI API.
 type OpenAIRequest struct {
 	Model    string          `json:"model"`
 	Messages []OpenAIMessage `json:"messages"`
 }
 
+// OpenAIMessage represents a single message in the OpenAI conversation.
 type OpenAIMessage struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
+// OpenAIResponse represents the response from OpenAI API.
 type OpenAIResponse struct {
 	Choices []struct {
 		Message struct {
@@ -61,9 +70,10 @@ type OpenAIResponse struct {
 	} `json:"choices"`
 }
 
+// ParsedIntent represents the extracted intent from a user message.
 type ParsedIntent struct {
-	Action      string  `json:"action"` // add_transaction, add_budget, add_savings_goal, query, unknown
-	Type        string  `json:"type"`   // income/expense for transactions
+	Action      string  `json:"action"`      // add_transaction, add_budget, add_savings_goal, query, unknown
+	Type        string  `json:"type"`        // income/expense for transactions
 	Amount      float64 `json:"amount"`
 	Category    string  `json:"category"`
 	Description string  `json:"description"`
@@ -96,6 +106,8 @@ Examples:
 
 If you can't understand, set action to "unknown" and provide a helpful response.`
 
+// Chat processes a user message, extracts intent using AI, and executes the action.
+// Returns a friendly response and the result of any executed action.
 func (s *AIService) Chat(ctx context.Context, userID uuid.UUID, req ChatRequest) (*ChatResponse, error) {
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	if apiKey == "" {
@@ -104,7 +116,6 @@ func (s *AIService) Chat(ctx context.Context, userID uuid.UUID, req ChatRequest)
 		}, nil
 	}
 
-	// Call OpenAI
 	intent, err := s.parseIntent(apiKey, req.Message)
 	if err != nil {
 		return &ChatResponse{
@@ -112,7 +123,6 @@ func (s *AIService) Chat(ctx context.Context, userID uuid.UUID, req ChatRequest)
 		}, nil
 	}
 
-	// Execute the action
 	result, err := s.executeAction(ctx, userID, intent)
 	if err != nil {
 		return &ChatResponse{
@@ -126,6 +136,7 @@ func (s *AIService) Chat(ctx context.Context, userID uuid.UUID, req ChatRequest)
 	}, nil
 }
 
+// parseIntent calls OpenAI to extract structured intent from natural language.
 func (s *AIService) parseIntent(apiKey, message string) (*ParsedIntent, error) {
 	reqBody := OpenAIRequest{
 		Model: "gpt-4o-mini",
@@ -135,23 +146,33 @@ func (s *AIService) parseIntent(apiKey, message string) (*ParsedIntent, error) {
 		},
 	}
 
-	jsonBody, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(jsonBody))
+	jsonBody, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("marshaling OpenAI request: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return nil, fmt.Errorf("creating OpenAI request: %w", err)
+	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("calling OpenAI API: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading OpenAI response: %w", err)
+	}
 
 	var openAIResp OpenAIResponse
 	if err := json.Unmarshal(body, &openAIResp); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parsing OpenAI response: %w", err)
 	}
 
 	if len(openAIResp.Choices) == 0 {
@@ -161,13 +182,13 @@ func (s *AIService) parseIntent(apiKey, message string) (*ParsedIntent, error) {
 	var intent ParsedIntent
 	content := openAIResp.Choices[0].Message.Content
 	if err := json.Unmarshal([]byte(content), &intent); err != nil {
-		// Try to extract JSON from response if it has extra text
-		return nil, fmt.Errorf("failed to parse AI response: %s", content)
+		return nil, fmt.Errorf("parsing AI intent from response: %w", err)
 	}
 
 	return &intent, nil
 }
 
+// executeAction dispatches the parsed intent to the appropriate handler.
 func (s *AIService) executeAction(ctx context.Context, userID uuid.UUID, intent *ParsedIntent) (*ActionResult, error) {
 	switch intent.Action {
 	case "add_transaction":
@@ -183,6 +204,7 @@ func (s *AIService) executeAction(ctx context.Context, userID uuid.UUID, intent 
 	}
 }
 
+// addTransaction creates a new transaction from the parsed intent.
 func (s *AIService) addTransaction(ctx context.Context, userID uuid.UUID, intent *ParsedIntent) (*ActionResult, error) {
 	txType := model.TransactionTypeExpense
 	if intent.Type == "income" {
@@ -199,7 +221,7 @@ func (s *AIService) addTransaction(ctx context.Context, userID uuid.UUID, intent
 
 	tx, err := s.transactionService.Create(ctx, userID, input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating transaction from AI: %w", err)
 	}
 
 	return &ActionResult{
@@ -208,6 +230,7 @@ func (s *AIService) addTransaction(ctx context.Context, userID uuid.UUID, intent
 	}, nil
 }
 
+// addBudget creates a new budget from the parsed intent.
 func (s *AIService) addBudget(ctx context.Context, userID uuid.UUID, intent *ParsedIntent) (*ActionResult, error) {
 	period := "monthly"
 	if intent.Period != "" {
@@ -223,7 +246,7 @@ func (s *AIService) addBudget(ctx context.Context, userID uuid.UUID, intent *Par
 
 	budget, err := s.budgetService.Create(ctx, userID, input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating budget from AI: %w", err)
 	}
 
 	return &ActionResult{
@@ -232,6 +255,7 @@ func (s *AIService) addBudget(ctx context.Context, userID uuid.UUID, intent *Par
 	}, nil
 }
 
+// addSavingsGoal creates a new savings goal from the parsed intent.
 func (s *AIService) addSavingsGoal(ctx context.Context, userID uuid.UUID, intent *ParsedIntent) (*ActionResult, error) {
 	var targetDate *time.Time
 	if intent.TargetDate != "" {
@@ -249,7 +273,7 @@ func (s *AIService) addSavingsGoal(ctx context.Context, userID uuid.UUID, intent
 
 	goal, err := s.savingsService.Create(ctx, userID, input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating savings goal from AI: %w", err)
 	}
 
 	return &ActionResult{

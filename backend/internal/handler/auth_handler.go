@@ -1,19 +1,29 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/wealthpath/backend/internal/model"
 	"github.com/wealthpath/backend/internal/service"
 )
 
-type AuthHandler struct {
-	userService *service.UserService
+// AuthServiceInterface for handler testing
+type AuthServiceInterface interface {
+	Register(ctx context.Context, input service.RegisterInput) (*service.AuthResponse, error)
+	Login(ctx context.Context, input service.LoginInput) (*service.AuthResponse, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*model.User, error)
+	UpdateSettings(ctx context.Context, userID uuid.UUID, input service.UpdateSettingsInput) (*model.User, error)
 }
 
-func NewAuthHandler(userService *service.UserService) *AuthHandler {
+type AuthHandler struct {
+	userService AuthServiceInterface
+}
+
+func NewAuthHandler(userService AuthServiceInterface) *AuthHandler {
 	return &AuthHandler{userService: userService}
 }
 

@@ -398,3 +398,4 @@ db.SetConnMaxLifetime(5 * time.Minute)
 - `backend/internal/service/user_service.go` - JWT secret issue
 - `frontend/src/lib/api.ts` - Error handling improvements needed
 
+

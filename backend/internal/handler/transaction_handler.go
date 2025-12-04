@@ -1,72 +1,99 @@
+// Package handler implements HTTP handlers for the WealthPath REST API.
+// Each handler validates input, delegates to services, and formats responses.
 package handler
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/wealthpath/backend/internal/apperror"
+	"github.com/wealthpath/backend/internal/model"
+	"github.com/wealthpath/backend/internal/repository"
 	"github.com/wealthpath/backend/internal/service"
 )
 
-type TransactionHandler struct {
-	service *service.TransactionService
+// TransactionHandlerServiceInterface defines the service contract for transaction operations.
+// This interface enables dependency injection and testability.
+type TransactionHandlerServiceInterface interface {
+	Create(ctx context.Context, userID uuid.UUID, input service.CreateTransactionInput) (*model.Transaction, error)
+	Get(ctx context.Context, id uuid.UUID) (*model.Transaction, error)
+	List(ctx context.Context, userID uuid.UUID, input service.ListTransactionsInput) ([]model.Transaction, error)
+	Update(ctx context.Context, id, userID uuid.UUID, input service.UpdateTransactionInput) (*model.Transaction, error)
+	Delete(ctx context.Context, id, userID uuid.UUID) error
 }
 
-func NewTransactionHandler(service *service.TransactionService) *TransactionHandler {
+// TransactionHandler handles HTTP requests for transaction operations.
+type TransactionHandler struct {
+	service TransactionHandlerServiceInterface
+}
+
+// NewTransactionHandler creates a new TransactionHandler with the given service.
+func NewTransactionHandler(service TransactionHandlerServiceInterface) *TransactionHandler {
 	return &TransactionHandler{service: service}
 }
 
+// Create handles POST /api/transactions - creates a new transaction.
 func (h *TransactionHandler) Create(w http.ResponseWriter, r *http.Request) {
 	userID := GetUserID(r.Context())
 
 	var input service.CreateTransactionInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
+		respondAppError(w, apperror.BadRequest("invalid request body: "+err.Error()))
 		return
 	}
 
 	// Validate required fields
 	if input.Type == "" {
-		respondError(w, http.StatusBadRequest, "type is required (income or expense)")
+		respondAppError(w, apperror.ValidationError("type", "type is required (income or expense)"))
 		return
 	}
 	if input.Amount.IsZero() {
-		respondError(w, http.StatusBadRequest, "amount is required and must be greater than 0")
+		respondAppError(w, apperror.ValidationError("amount", "amount is required and must be greater than 0"))
 		return
 	}
 	if input.Category == "" {
-		respondError(w, http.StatusBadRequest, "category is required")
+		respondAppError(w, apperror.ValidationError("category", "category is required"))
 		return
 	}
 
 	tx, err := h.service.Create(r.Context(), userID, input)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, "failed to create transaction: "+err.Error())
+		respondAppError(w, apperror.Internal(err))
 		return
 	}
 
 	respondJSON(w, http.StatusCreated, tx)
 }
 
+// Get handles GET /api/transactions/{id} - retrieves a transaction by ID.
 func (h *TransactionHandler) Get(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid id")
+		respondAppError(w, apperror.BadRequest("invalid transaction ID"))
 		return
 	}
 
 	tx, err := h.service.Get(r.Context(), id)
 	if err != nil {
-		respondError(w, http.StatusNotFound, "transaction not found")
+		if errors.Is(err, repository.ErrTransactionNotFound) {
+			respondAppError(w, apperror.NotFound("transaction"))
+			return
+		}
+		respondAppError(w, apperror.Internal(err))
 		return
 	}
 
 	respondJSON(w, http.StatusOK, tx)
 }
 
+// List handles GET /api/transactions - lists transactions with optional filters.
+// Supports query params: page, pageSize, type, category, startDate, endDate.
 func (h *TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
 	userID := GetUserID(r.Context())
 
@@ -104,48 +131,58 @@ func (h *TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	transactions, err := h.service.List(r.Context(), userID, input)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, "failed to list transactions")
+		respondAppError(w, apperror.Internal(err))
 		return
 	}
 
 	respondJSON(w, http.StatusOK, transactions)
 }
 
+// Update handles PUT /api/transactions/{id} - updates an existing transaction.
 func (h *TransactionHandler) Update(w http.ResponseWriter, r *http.Request) {
 	userID := GetUserID(r.Context())
 
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid id: "+err.Error())
+		respondAppError(w, apperror.BadRequest("invalid transaction ID"))
 		return
 	}
 
 	var input service.UpdateTransactionInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
+		respondAppError(w, apperror.BadRequest("invalid request body: "+err.Error()))
 		return
 	}
 
 	tx, err := h.service.Update(r.Context(), id, userID, input)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, "failed to update transaction: "+err.Error())
+		if errors.Is(err, repository.ErrTransactionNotFound) {
+			respondAppError(w, apperror.NotFound("transaction"))
+			return
+		}
+		respondAppError(w, apperror.Internal(err))
 		return
 	}
 
 	respondJSON(w, http.StatusOK, tx)
 }
 
+// Delete handles DELETE /api/transactions/{id} - removes a transaction.
 func (h *TransactionHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	userID := GetUserID(r.Context())
 
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid id")
+		respondAppError(w, apperror.BadRequest("invalid transaction ID"))
 		return
 	}
 
 	if err := h.service.Delete(r.Context(), id, userID); err != nil {
-		respondError(w, http.StatusInternalServerError, "failed to delete transaction")
+		if errors.Is(err, repository.ErrTransactionNotFound) {
+			respondAppError(w, apperror.NotFound("transaction"))
+			return
+		}
+		respondAppError(w, apperror.Internal(err))
 		return
 	}
 

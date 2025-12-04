@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,16 +12,36 @@ import (
 	"github.com/wealthpath/backend/internal/repository"
 )
 
-type BudgetService struct {
-	repo            *repository.BudgetRepository
-	transactionRepo *repository.TransactionRepository
+// BudgetRepositoryInterface defines the contract for budget data access.
+// Implementations must be safe for concurrent use.
+type BudgetRepositoryInterface interface {
+	Create(ctx context.Context, budget *model.Budget) error
+	GetByID(ctx context.Context, id uuid.UUID) (*model.Budget, error)
+	List(ctx context.Context, userID uuid.UUID) ([]model.Budget, error)
+	GetActiveForUser(ctx context.Context, userID uuid.UUID) ([]model.Budget, error)
+	Update(ctx context.Context, budget *model.Budget) error
+	Delete(ctx context.Context, id, userID uuid.UUID) error
 }
 
-func NewBudgetService(repo *repository.BudgetRepository) *BudgetService {
+// TransactionRepoForBudget provides transaction data needed for budget calculations.
+type TransactionRepoForBudget interface {
+	GetSpentByCategory(ctx context.Context, userID uuid.UUID, category string, startDate, endDate time.Time) (decimal.Decimal, error)
+}
+
+// BudgetService handles business logic for budget management.
+// It tracks spending against budget limits and calculates remaining amounts.
+type BudgetService struct {
+	repo            BudgetRepositoryInterface
+	transactionRepo TransactionRepoForBudget
+}
+
+// NewBudgetService creates a new BudgetService with the given repository.
+func NewBudgetService(repo BudgetRepositoryInterface) *BudgetService {
 	return &BudgetService{repo: repo}
 }
 
-func (s *BudgetService) SetTransactionRepo(repo *repository.TransactionRepository) {
+// SetTransactionRepo sets the transaction repository for spent calculations.
+func (s *BudgetService) SetTransactionRepo(repo TransactionRepoForBudget) {
 	s.transactionRepo = repo
 }
 
@@ -42,6 +63,8 @@ type UpdateBudgetInput struct {
 	EndDate   *time.Time      `json:"endDate"`
 }
 
+// Create creates a new budget for the given user.
+// Defaults currency to USD and period to monthly if not specified.
 func (s *BudgetService) Create(ctx context.Context, userID uuid.UUID, input CreateBudgetInput) (*model.Budget, error) {
 	budget := &model.Budget{
 		UserID:    userID,
@@ -61,24 +84,36 @@ func (s *BudgetService) Create(ctx context.Context, userID uuid.UUID, input Crea
 	}
 
 	if err := s.repo.Create(ctx, budget); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating budget: %w", err)
 	}
 
 	return budget, nil
 }
 
+// Get retrieves a budget by its ID.
 func (s *BudgetService) Get(ctx context.Context, id uuid.UUID) (*model.Budget, error) {
-	return s.repo.GetByID(ctx, id)
+	budget, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("getting budget %s: %w", id, err)
+	}
+	return budget, nil
 }
 
+// List retrieves all budgets for a user.
 func (s *BudgetService) List(ctx context.Context, userID uuid.UUID) ([]model.Budget, error) {
-	return s.repo.List(ctx, userID)
+	budgets, err := s.repo.List(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("listing budgets for user %s: %w", userID, err)
+	}
+	return budgets, nil
 }
 
+// ListWithSpent retrieves active budgets with calculated spending data.
+// It calculates spent amount, remaining amount, and percentage used for each budget.
 func (s *BudgetService) ListWithSpent(ctx context.Context, userID uuid.UUID) ([]model.BudgetWithSpent, error) {
 	budgets, err := s.repo.GetActiveForUser(ctx, userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting active budgets for user %s: %w", userID, err)
 	}
 
 	if s.transactionRepo == nil {
@@ -97,7 +132,7 @@ func (s *BudgetService) ListWithSpent(ctx context.Context, userID uuid.UUID) ([]
 
 		spent, err := s.transactionRepo.GetSpentByCategory(ctx, userID, budget.Category, startDate, endDate)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("calculating spent for budget %s: %w", budget.ID, err)
 		}
 
 		remaining := budget.Amount.Sub(spent)
@@ -117,10 +152,12 @@ func (s *BudgetService) ListWithSpent(ctx context.Context, userID uuid.UUID) ([]
 	return result, nil
 }
 
+// Update modifies an existing budget.
+// Returns ErrBudgetNotFound if the budget does not exist or belongs to another user.
 func (s *BudgetService) Update(ctx context.Context, id uuid.UUID, userID uuid.UUID, input UpdateBudgetInput) (*model.Budget, error) {
 	budget, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetching budget %s for update: %w", id, err)
 	}
 
 	if budget.UserID != userID {
@@ -135,16 +172,21 @@ func (s *BudgetService) Update(ctx context.Context, id uuid.UUID, userID uuid.UU
 	budget.EndDate = input.EndDate
 
 	if err := s.repo.Update(ctx, budget); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("updating budget %s: %w", id, err)
 	}
 
 	return budget, nil
 }
 
+// Delete removes a budget by ID for the given user.
 func (s *BudgetService) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
-	return s.repo.Delete(ctx, id, userID)
+	if err := s.repo.Delete(ctx, id, userID); err != nil {
+		return fmt.Errorf("deleting budget %s: %w", id, err)
+	}
+	return nil
 }
 
+// getPeriodDates calculates the start and end dates for a budget period.
 func getPeriodDates(period string, now time.Time) (start, end time.Time) {
 	switch period {
 	case "weekly":

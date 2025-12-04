@@ -10,10 +10,10 @@ import (
 )
 
 type RecurringHandler struct {
-	recurringService *service.RecurringService
+	recurringService RecurringServiceInterface
 }
 
-func NewRecurringHandler(recurringService *service.RecurringService) *RecurringHandler {
+func NewRecurringHandler(recurringService RecurringServiceInterface) *RecurringHandler {
 	return &RecurringHandler{recurringService: recurringService}
 }
 

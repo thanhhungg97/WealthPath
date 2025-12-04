@@ -11,10 +11,10 @@ import (
 )
 
 type DebtHandler struct {
-	service *service.DebtService
+	service DebtServiceInterface
 }
 
-func NewDebtHandler(service *service.DebtService) *DebtHandler {
+func NewDebtHandler(service DebtServiceInterface) *DebtHandler {
 	return &DebtHandler{service: service}
 }
 

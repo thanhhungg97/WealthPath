@@ -10,10 +10,10 @@ import (
 )
 
 type BudgetHandler struct {
-	service *service.BudgetService
+	service BudgetServiceInterface
 }
 
-func NewBudgetHandler(service *service.BudgetService) *BudgetHandler {
+func NewBudgetHandler(service BudgetServiceInterface) *BudgetHandler {
 	return &BudgetHandler{service: service}
 }
 

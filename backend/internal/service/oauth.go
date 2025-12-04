@@ -2,13 +2,15 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
 )
 
-// OAuthProvider defines the interface for OAuth providers
+// OAuthProvider defines the interface for OAuth authentication providers.
+// Implementations handle provider-specific OAuth flows.
 type OAuthProvider interface {
 	Name() string
 	AuthURL() string
@@ -16,7 +18,7 @@ type OAuthProvider interface {
 	GetUser(accessToken string) (*OAuthUser, error)
 }
 
-// OAuthUser represents a user from any OAuth provider
+// OAuthUser represents normalized user data from any OAuth provider.
 type OAuthUser struct {
 	ID        string
 	Email     string
@@ -26,15 +28,17 @@ type OAuthUser struct {
 
 // ============ FACEBOOK ============
 
+// FacebookProvider implements OAuth authentication with Facebook.
 type FacebookProvider struct{}
 
+// Name returns the provider identifier.
 func (p *FacebookProvider) Name() string { return "facebook" }
 
+// AuthURL returns the Facebook OAuth authorization URL.
 func (p *FacebookProvider) AuthURL() string {
 	clientID := os.Getenv("FACEBOOK_APP_ID")
 	redirectURI := os.Getenv("FACEBOOK_REDIRECT_URI")
 
-	// Validate required environment variables
 	if clientID == "" || redirectURI == "" {
 		return ""
 	}
@@ -46,6 +50,7 @@ func (p *FacebookProvider) AuthURL() string {
 		"&response_type=code"
 }
 
+// ExchangeCode exchanges an authorization code for an access token.
 func (p *FacebookProvider) ExchangeCode(code string) (string, error) {
 	clientID := os.Getenv("FACEBOOK_APP_ID")
 	clientSecret := os.Getenv("FACEBOOK_APP_SECRET")
@@ -59,7 +64,7 @@ func (p *FacebookProvider) ExchangeCode(code string) (string, error) {
 
 	resp, err := http.Get(tokenURL)
 	if err != nil {
-		return "", ErrOAuthFailed
+		return "", fmt.Errorf("facebook token exchange: %w", ErrOAuthFailed)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -67,17 +72,18 @@ func (p *FacebookProvider) ExchangeCode(code string) (string, error) {
 		AccessToken string `json:"access_token"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil || tokenResp.AccessToken == "" {
-		return "", ErrOAuthFailed
+		return "", fmt.Errorf("parsing facebook token response: %w", ErrOAuthFailed)
 	}
 	return tokenResp.AccessToken, nil
 }
 
+// GetUser retrieves user information from Facebook using an access token.
 func (p *FacebookProvider) GetUser(accessToken string) (*OAuthUser, error) {
 	userURL := "https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=" + accessToken
 
 	resp, err := http.Get(userURL)
 	if err != nil {
-		return nil, ErrOAuthFailed
+		return nil, fmt.Errorf("fetching facebook user: %w", ErrOAuthFailed)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -93,7 +99,7 @@ func (p *FacebookProvider) GetUser(accessToken string) (*OAuthUser, error) {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&fbUser); err != nil || fbUser.ID == "" {
-		return nil, ErrOAuthFailed
+		return nil, fmt.Errorf("parsing facebook user response: %w", ErrOAuthFailed)
 	}
 
 	return &OAuthUser{
@@ -106,15 +112,17 @@ func (p *FacebookProvider) GetUser(accessToken string) (*OAuthUser, error) {
 
 // ============ GOOGLE ============
 
+// GoogleProvider implements OAuth authentication with Google.
 type GoogleProvider struct{}
 
+// Name returns the provider identifier.
 func (p *GoogleProvider) Name() string { return "google" }
 
+// AuthURL returns the Google OAuth authorization URL.
 func (p *GoogleProvider) AuthURL() string {
 	clientID := os.Getenv("GOOGLE_CLIENT_ID")
 	redirectURI := os.Getenv("GOOGLE_REDIRECT_URI")
 
-	// Validate required environment variables
 	if clientID == "" || redirectURI == "" {
 		return ""
 	}
@@ -127,6 +135,7 @@ func (p *GoogleProvider) AuthURL() string {
 		"&access_type=offline"
 }
 
+// ExchangeCode exchanges an authorization code for an access token.
 func (p *GoogleProvider) ExchangeCode(code string) (string, error) {
 	clientID := os.Getenv("GOOGLE_CLIENT_ID")
 	clientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
@@ -141,7 +150,7 @@ func (p *GoogleProvider) ExchangeCode(code string) (string, error) {
 
 	resp, err := http.PostForm("https://oauth2.googleapis.com/token", data)
 	if err != nil {
-		return "", ErrOAuthFailed
+		return "", fmt.Errorf("google token exchange: %w", ErrOAuthFailed)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -149,22 +158,29 @@ func (p *GoogleProvider) ExchangeCode(code string) (string, error) {
 		AccessToken string `json:"access_token"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil || tokenResp.AccessToken == "" {
-		return "", ErrOAuthFailed
+		return "", fmt.Errorf("parsing google token response: %w", ErrOAuthFailed)
 	}
 	return tokenResp.AccessToken, nil
 }
 
+// GetUser retrieves user information from Google using an access token.
 func (p *GoogleProvider) GetUser(accessToken string) (*OAuthUser, error) {
-	req, _ := http.NewRequest("GET", "https://www.googleapis.com/oauth2/v2/userinfo", nil)
+	req, err := http.NewRequest("GET", "https://www.googleapis.com/oauth2/v2/userinfo", nil)
+	if err != nil {
+		return nil, fmt.Errorf("creating google user request: %w", ErrOAuthFailed)
+	}
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 
 	resp, err := (&http.Client{}).Do(req)
 	if err != nil {
-		return nil, ErrOAuthFailed
+		return nil, fmt.Errorf("fetching google user: %w", ErrOAuthFailed)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading google user response: %w", ErrOAuthFailed)
+	}
 
 	var gUser struct {
 		ID      string `json:"id"`
@@ -174,7 +190,7 @@ func (p *GoogleProvider) GetUser(accessToken string) (*OAuthUser, error) {
 	}
 
 	if err := json.Unmarshal(body, &gUser); err != nil || gUser.ID == "" {
-		return nil, ErrOAuthFailed
+		return nil, fmt.Errorf("parsing google user response: %w", ErrOAuthFailed)
 	}
 
 	return &OAuthUser{
@@ -185,7 +201,7 @@ func (p *GoogleProvider) GetUser(accessToken string) (*OAuthUser, error) {
 	}, nil
 }
 
-// Provider registry
+// OAuthProviders is the registry of available OAuth providers.
 var OAuthProviders = map[string]OAuthProvider{
 	"facebook": &FacebookProvider{},
 	"google":   &GoogleProvider{},

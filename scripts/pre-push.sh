@@ -51,6 +51,14 @@ else
     echo -e "${GREEN}✓ Backend: Build successful${NC}"
 fi
 
+echo "  → Running tests..."
+if ! go test ./internal/... -short; then
+    echo -e "${RED}✗ Backend: Tests failed${NC}"
+    ERRORS=$((ERRORS + 1))
+else
+    echo -e "${GREEN}✓ Backend: Tests passed${NC}"
+fi
+
 cd ..
 
 # Frontend checks
@@ -74,6 +82,14 @@ else
     echo -e "${GREEN}✓ Frontend: Build successful${NC}"
 fi
 
+echo "  → Running tests..."
+if ! npm test -- --passWithNoTests; then
+    echo -e "${RED}✗ Frontend: Tests failed${NC}"
+    ERRORS=$((ERRORS + 1))
+else
+    echo -e "${GREEN}✓ Frontend: Tests passed${NC}"
+fi
+
 cd ..
 
 # Summary
@@ -85,4 +101,5 @@ else
     echo -e "${RED}❌ $ERRORS check(s) failed. Please fix errors before pushing.${NC}"
     exit 1
 fi
+
 

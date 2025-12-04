@@ -82,3 +82,26 @@ func (r *UserRepository) EmailExists(ctx context.Context, email string) (bool, e
 	err := r.db.GetContext(ctx, &exists, query, email)
 	return exists, err
 }
+
+func (r *UserRepository) UpdateLastLogin(ctx context.Context, id uuid.UUID) error {
+	query := `UPDATE users SET updated_at = NOW() WHERE id = $1`
+	_, err := r.db.ExecContext(ctx, query, id)
+	return err
+}
+
+func (r *UserRepository) GetOrCreateByOAuth(ctx context.Context, user *model.User) (*model.User, error) {
+	// Try to find existing user by OAuth provider
+	existing, err := r.GetByOAuth(ctx, *user.OAuthProvider, *user.OAuthID)
+	if err == nil {
+		return existing, nil
+	}
+	if !errors.Is(err, ErrUserNotFound) {
+		return nil, err
+	}
+
+	// Create new user
+	if err := r.Create(ctx, user); err != nil {
+		return nil, err
+	}
+	return user, nil
+}
