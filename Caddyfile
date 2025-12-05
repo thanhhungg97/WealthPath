@@ -13,33 +13,14 @@
 
 # Main app - wealthpath.duckdns.org
 {$DOMAIN:localhost} {
+    # Admin panel routes (must be before frontend catch-all)
+    reverse_proxy /admin/* admin:8081
+    
     # API routes to backend
     reverse_proxy /api/* backend:8080
     
     # Everything else to frontend
     reverse_proxy /* frontend:3000
-    
-    # Logging
-    log {
-        output stdout
-        format console
-    }
-    
-    # Security headers
-    header {
-        X-Content-Type-Options nosniff
-        X-Frame-Options DENY
-        Referrer-Policy strict-origin-when-cross-origin
-        -Server
-    }
-    
-    # Enable compression
-    encode gzip zstd
-}
-
-# Admin panel - admin.wealthpath.duckdns.org
-admin.{$DOMAIN:localhost} {
-    reverse_proxy admin:8081
     
     # Logging
     log {
