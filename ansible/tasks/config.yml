@@ -26,6 +26,7 @@
   set_fact:
     admin_username: "{{ lookup('env', 'ADMIN_USERNAME') or admin_username | default('admin') }}"
     admin_password: "{{ lookup('env', 'ADMIN_PASSWORD') or admin_password | default('') }}"
+  no_log: true
 
 - name: Check if .env exists
   stat:
@@ -37,24 +38,28 @@
     jwt_secret: "{{ lookup('password', '/dev/null length=64 chars=hexdigits') }}"
     postgres_password: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
   when: not env_file.stat.exists and postgres_password is not defined
+  no_log: true
 
 - name: Read existing secrets
   slurp:
     src: "{{ app_dir }}/.env"
   register: existing_env
   when: env_file.stat.exists
+  no_log: true
 
 - name: Parse existing JWT secret
   set_fact:
     jwt_secret: "{{ existing_env.content | b64decode | regex_search('JWT_SECRET=(.+)', '\\1') | first }}"
   when: env_file.stat.exists and existing_env.content is defined
   ignore_errors: yes
+  no_log: true
 
 - name: Parse existing Postgres password
   set_fact:
     postgres_password: "{{ existing_env.content | b64decode | regex_search('POSTGRES_PASSWORD=(.+)', '\\1') | first }}"
   when: env_file.stat.exists and existing_env.content is defined
   ignore_errors: yes
+  no_log: true
 
 - name: Create .env file
   template:
@@ -63,4 +68,4 @@
     owner: ubuntu
     group: ubuntu
     mode: '0600'
-
+  no_log: true
