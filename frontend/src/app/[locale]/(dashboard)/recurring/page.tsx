@@ -10,6 +10,8 @@ import {
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
+import { useAuthStore } from "@/store/auth"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -80,9 +82,12 @@ const INCOME_CATEGORIES = [
 export default function RecurringPage() {
   const [isOpen, setIsOpen] = useState(false)
   const [type, setType] = useState<"income" | "expense">("expense")
+  const [amount, setAmount] = useState("")
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const t = useTranslations()
+  const { user } = useAuthStore()
+  const currency = user?.currency || "USD"
 
   const { data: recurring, isLoading } = useQuery<RecurringTransaction[]>({
     queryKey: ["recurring"],
@@ -134,12 +139,13 @@ export default function RecurringPage() {
     const formData = new FormData(e.currentTarget)
     createMutation.mutate({
       type,
-      amount: parseFloat(formData.get("amount") as string),
+      amount: parseFloat(amount.replace(/,/g, "")),
       category: formData.get("category") as string,
       description: formData.get("description") as string,
       frequency: formData.get("frequency") as CreateRecurringInput["frequency"],
       startDate: formData.get("startDate") as string,
     })
+    setAmount("") // Reset after submit
   }
 
   const activeItems = recurring?.filter((r) => r.isActive) || []
@@ -195,12 +201,11 @@ export default function RecurringPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="amount">{t('transactions.amount')}</Label>
-                <Input
+                <CurrencyInput
                   id="amount"
-                  name="amount"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
+                  value={amount}
+                  onChange={setAmount}
+                  currency={currency}
                   required
                 />
               </div>

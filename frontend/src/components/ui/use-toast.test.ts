@@ -1,5 +1,5 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useToast, toast, reducer } from './use-toast';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { reducer, toast, useToast } from './use-toast';
 
 describe('reducer', () => {
   const initialState = { toasts: [] };

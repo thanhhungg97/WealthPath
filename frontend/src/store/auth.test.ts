@@ -1,6 +1,7 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useAuthStore } from './auth';
+import { act, renderHook, waitFor } from '@testing-library/react';
+
 import { api } from '@/lib/api';
+import { useAuthStore } from './auth';
 
 // Mock the api module
 jest.mock('@/lib/api', () => ({

@@ -6,6 +6,8 @@ import { api, SavingsGoal, CreateSavingsGoalInput } from "@/lib/api"
 import { formatCurrency, formatPercent, formatDate } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
+import { useAuthStore } from "@/store/auth"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -35,9 +37,12 @@ export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false)
   const [contributeId, setContributeId] = useState<string | null>(null)
   const [contributeAmount, setContributeAmount] = useState("")
+  const [targetAmount, setTargetAmount] = useState("")
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const t = useTranslations()
+  const { user } = useAuthStore()
+  const currency = user?.currency || "USD"
 
   const { data: goals, isLoading } = useQuery<SavingsGoal[]>({
     queryKey: ["savings-goals"],
@@ -81,10 +86,11 @@ export default function SavingsPage() {
     const colorIndex = Math.floor(Math.random() * COLORS.length)
     createMutation.mutate({
       name: formData.get("name") as string,
-      targetAmount: parseFloat(formData.get("targetAmount") as string),
+      targetAmount: parseFloat(targetAmount.replace(/,/g, "")),
       targetDate: formData.get("targetDate") as string || undefined,
       color: COLORS[colorIndex],
     })
+    setTargetAmount("") // Reset after submit
   }
 
   const totalSaved = goals?.reduce((sum, g) => sum + parseFloat(g.currentAmount), 0) || 0
@@ -121,12 +127,11 @@ export default function SavingsPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="targetAmount">{t('savings.targetAmount')}</Label>
-                <Input
+                <CurrencyInput
                   id="targetAmount"
-                  name="targetAmount"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
+                  value={targetAmount}
+                  onChange={setTargetAmount}
+                  currency={currency}
                   required
                 />
               </div>
@@ -300,13 +305,11 @@ export default function SavingsPage() {
                         <div className="space-y-4">
                           <div className="space-y-2">
                             <Label htmlFor="contribute-amount">{t('transactions.amount')}</Label>
-                            <Input
+                            <CurrencyInput
                               id="contribute-amount"
-                              type="number"
-                              step="0.01"
-                              placeholder="0.00"
                               value={contributeAmount}
-                              onChange={(e) => setContributeAmount(e.target.value)}
+                              onChange={setContributeAmount}
+                              currency={currency}
                             />
                           </div>
                           <Button
@@ -315,7 +318,7 @@ export default function SavingsPage() {
                               if (contributeAmount) {
                                 contributeMutation.mutate({
                                   id: goal.id,
-                                  amount: parseFloat(contributeAmount),
+                                  amount: parseFloat(contributeAmount.replace(/,/g, "")),
                                 })
                               }
                             }}

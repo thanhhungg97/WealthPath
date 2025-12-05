@@ -6,6 +6,8 @@ import { api, Debt, CreateDebtInput, PayoffPlan } from "@/lib/api"
 import { formatCurrency, formatDate, formatPercent } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
+import { useAuthStore } from "@/store/auth"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -54,9 +56,14 @@ export default function DebtsPage() {
   const [paymentDebtId, setPaymentDebtId] = useState<string | null>(null)
   const [paymentAmount, setPaymentAmount] = useState("")
   const [selectedDebtId, setSelectedDebtId] = useState<string | null>(null)
+  const [originalAmount, setOriginalAmount] = useState("")
+  const [currentBalance, setCurrentBalance] = useState("")
+  const [minimumPayment, setMinimumPayment] = useState("")
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const t = useTranslations("debts")
+  const { user } = useAuthStore()
+  const currency = user?.currency || "USD"
 
   const { data: debts, isLoading } = useQuery<Debt[]>({
     queryKey: ["debts"],
@@ -106,13 +113,17 @@ export default function DebtsPage() {
     createMutation.mutate({
       name: formData.get("name") as string,
       type: formData.get("type") as string,
-      originalAmount: parseFloat(formData.get("originalAmount") as string),
-      currentBalance: parseFloat(formData.get("currentBalance") as string),
+      originalAmount: parseFloat(originalAmount.replace(/,/g, "")),
+      currentBalance: parseFloat(currentBalance.replace(/,/g, "")),
       interestRate: parseFloat(formData.get("interestRate") as string),
-      minimumPayment: parseFloat(formData.get("minimumPayment") as string),
+      minimumPayment: parseFloat(minimumPayment.replace(/,/g, "")),
       dueDay: parseInt(formData.get("dueDay") as string),
       startDate: formData.get("startDate") as string,
     })
+    // Reset after submit
+    setOriginalAmount("")
+    setCurrentBalance("")
+    setMinimumPayment("")
   }
 
   const totalDebt = debts?.reduce((sum, d) => sum + parseFloat(d.currentBalance), 0) || 0
@@ -164,23 +175,23 @@ export default function DebtsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="originalAmount">{t("totalAmount")}</Label>
-                  <Input
+                  <CurrencyInput
                     id="originalAmount"
-                    name="originalAmount"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
+                    value={originalAmount}
+                    onChange={setOriginalAmount}
+                    currency={currency}
+                    showQuickAmounts={false}
                     required
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="currentBalance">{t("currentBalance")}</Label>
-                  <Input
+                  <CurrencyInput
                     id="currentBalance"
-                    name="currentBalance"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
+                    value={currentBalance}
+                    onChange={setCurrentBalance}
+                    currency={currency}
+                    showQuickAmounts={false}
                     required
                   />
                 </div>
@@ -200,12 +211,12 @@ export default function DebtsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="minimumPayment">{t("minimumPayment")}</Label>
-                  <Input
+                  <CurrencyInput
                     id="minimumPayment"
-                    name="minimumPayment"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
+                    value={minimumPayment}
+                    onChange={setMinimumPayment}
+                    currency={currency}
+                    showQuickAmounts={false}
                     required
                   />
                 </div>
@@ -381,12 +392,10 @@ export default function DebtsPage() {
                         <div className="space-y-4">
                           <div className="space-y-2">
                             <Label>{t("paymentAmount")}</Label>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              placeholder={debt.minimumPayment}
+                            <CurrencyInput
                               value={paymentAmount}
-                              onChange={(e) => setPaymentAmount(e.target.value)}
+                              onChange={setPaymentAmount}
+                              currency={currency}
                             />
                           </div>
                           <Button
@@ -395,7 +404,7 @@ export default function DebtsPage() {
                               if (paymentAmount) {
                                 paymentMutation.mutate({
                                   id: debt.id,
-                                  amount: parseFloat(paymentAmount),
+                                  amount: parseFloat(paymentAmount.replace(/,/g, "")),
                                 })
                               }
                             }}

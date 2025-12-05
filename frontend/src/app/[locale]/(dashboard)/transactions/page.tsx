@@ -6,6 +6,8 @@ import { api, Transaction, CreateTransactionInput } from "@/lib/api"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
+import { useAuthStore } from "@/store/auth"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -65,9 +67,12 @@ const INCOME_CATEGORIES = [
 export default function TransactionsPage() {
   const [isOpen, setIsOpen] = useState(false)
   const [type, setType] = useState<"income" | "expense">("expense")
+  const [amount, setAmount] = useState("")
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const t = useTranslations()
+  const { user } = useAuthStore()
+  const currency = user?.currency || "USD"
 
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
     queryKey: ["transactions"],
@@ -105,11 +110,12 @@ export default function TransactionsPage() {
     const formData = new FormData(e.currentTarget)
     createMutation.mutate({
       type,
-      amount: parseFloat(formData.get("amount") as string),
+      amount: parseFloat(amount.replace(/,/g, "")),
       category: formData.get("category") as string,
       description: formData.get("description") as string,
       date: formData.get("date") as string,
     })
+    setAmount("") // Reset after submit
   }
 
   const incomeTransactions = transactions?.filter((t) => t.type === "income") || []
@@ -157,12 +163,11 @@ export default function TransactionsPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="amount">{t('transactions.amount')}</Label>
-                <Input
+                <CurrencyInput
                   id="amount"
-                  name="amount"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
+                  value={amount}
+                  onChange={setAmount}
+                  currency={currency}
                   required
                 />
               </div>

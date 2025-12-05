@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { generateTestEmail, TEST_PASSWORD, TEST_NAME } from './helpers';
+import { TEST_NAME, TEST_PASSWORD, generateTestEmail } from './helpers';
+import { expect, test } from '@playwright/test';
 
 test.describe('Auth Flow', () => {
   test('should show login page for unauthenticated users @smoke', async ({ page }) => {
