@@ -183,6 +183,120 @@ Split playbooks when tasks have different:
 - Service restarts
 - Health checks
 
+## Configuration Flow
+
+The deployment uses a pipeline to inject secrets and generate the `.env` file on the server:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         TWO WAYS TO PROVIDE SECRETS                      │
+└─────────────────────────────────────────────────────────────────────────┘
+
+  ┌──────────────────────┐         ┌──────────────────────┐
+  │   GitHub Secrets     │         │   secrets.yml        │
+  │   (CI/CD Pipeline)   │         │   (Local/Manual)     │
+  │                      │         │                      │
+  │  ADMIN_PASSWORD      │         │  admin_password      │
+  │  GOOGLE_CLIENT_ID    │         │  google_client_id    │
+  │  OPENAI_API_KEY      │         │  openai_api_key      │
+  │  ...                 │         │  ...                 │
+  └──────────┬───────────┘         └──────────┬───────────┘
+             │                                 │
+             │  export as env vars             │  --ask-vault-pass
+             │                                 │
+             ▼                                 ▼
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │                        deploy-ansible.yml                              │
+  │                        (GitHub Actions)                                │
+  │   OR                                                                   │
+  │                        ansible-playbook playbook.yml                   │
+  │                        (Manual run)                                    │
+  └───────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │                        tasks/config.yml                                │
+  │                                                                        │
+  │  1. Detect server IP and domain                                        │
+  │  2. Read secrets from env vars OR secrets.yml                          │
+  │  3. Generate/preserve JWT_SECRET and POSTGRES_PASSWORD                 │
+  │  4. Render env.j2 template                                             │
+  └───────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │                        templates/env.j2                                │
+  │                        (Jinja2 Template)                               │
+  │                                                                        │
+  │  POSTGRES_PASSWORD={{ postgres_password }}                             │
+  │  JWT_SECRET={{ jwt_secret }}                                           │
+  │  GOOGLE_CLIENT_ID={{ google_client_id }}                               │
+  │  ADMIN_PASSWORD={{ admin_password }}                                   │
+  │  ...                                                                   │
+  └───────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │                        /opt/wealthpath/.env                            │
+  │                        (Generated on Server)                           │
+  │                                                                        │
+  │  POSTGRES_PASSWORD=abc123def456...                                     │
+  │  JWT_SECRET=xyz789...                                                  │
+  │  GOOGLE_CLIENT_ID=123.apps.googleusercontent.com                       │
+  │  ADMIN_PASSWORD=supersecret123                                         │
+  │  ...                                                                   │
+  └───────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │                        Docker Compose Services                         │
+  │                                                                        │
+  │  backend, frontend, admin, caddy, flyway                               │
+  │  (All read from .env file)                                             │
+  └───────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `templates/env.j2` | Jinja2 template defining `.env` structure |
+| `tasks/config.yml` | Logic to gather variables and render template |
+| `secrets.yml` | Encrypted local secrets (for manual deploys) |
+| GitHub Secrets | CI/CD secrets (for automated deploys) |
+
+### Adding New Secrets
+
+1. **Add to GitHub Secrets** (for CI/CD):
+   ```bash
+   gh secret set NEW_SECRET_NAME
+   ```
+
+2. **Add to workflow** (`.github/workflows/deploy-ansible.yml`):
+   ```yaml
+   env:
+     NEW_SECRET_NAME: ${{ secrets.NEW_SECRET_NAME }}
+   ```
+
+3. **Add to config.yml** (read from env var):
+   ```yaml
+   - name: Set new secret from env
+     set_fact:
+       new_secret: "{{ lookup('env', 'NEW_SECRET_NAME') or new_secret | default('') }}"
+   ```
+
+4. **Add to env.j2** (output to .env):
+   ```jinja2
+   {% if new_secret is defined and new_secret %}
+   NEW_SECRET_NAME={{ new_secret }}
+   {% endif %}
+   ```
+
+5. **Add to secrets.yml.example** (for documentation):
+   ```yaml
+   new_secret: "your-secret-here"
+   ```
+
 ## File Structure
 
 ```
