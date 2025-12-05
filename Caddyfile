@@ -14,7 +14,8 @@
 # Main app - wealthpath.duckdns.org
 {$DOMAIN:localhost} {
     # Admin panel routes (must be before frontend catch-all)
-    reverse_proxy /admin/* admin:8081
+    @admin path /admin /admin/*
+    reverse_proxy @admin admin:8081
     
     # API routes to backend
     reverse_proxy /api/* backend:8080
