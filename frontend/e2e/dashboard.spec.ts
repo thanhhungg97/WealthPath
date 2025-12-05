@@ -6,7 +6,7 @@ test.describe('Dashboard', () => {
     await registerAndLogin(page, 'dashboard');
   });
 
-  test('should display dashboard page with title', async ({ page }) => {
+  test('should display dashboard page with title @smoke', async ({ page }) => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 

@@ -7,12 +7,12 @@ test.describe('Transactions', () => {
     await navigateTo(page, '/en/transactions');
   });
 
-  test('should display transactions page with title', async ({ page }) => {
+  test('should display transactions page with title @smoke', async ({ page }) => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByRole('heading', { level: 1 })).toContainText(/transaction/i);
   });
 
-  test('should open add transaction dialog', async ({ page }) => {
+  test('should open add transaction dialog @smoke', async ({ page }) => {
     await page.getByRole('button', { name: /add transaction|add/i }).first().click();
     
     await waitForDialog(page);

@@ -2,12 +2,12 @@ import { test, expect } from '@playwright/test';
 import { generateTestEmail, TEST_PASSWORD, TEST_NAME } from './helpers';
 
 test.describe('Auth Flow', () => {
-  test('should show login page for unauthenticated users', async ({ page }) => {
+  test('should show login page for unauthenticated users @smoke', async ({ page }) => {
     await page.goto('/en/dashboard');
     await expect(page).toHaveURL(/login|register/);
   });
 
-  test('should register a new account successfully', async ({ page }) => {
+  test('should register a new account successfully @smoke', async ({ page }) => {
     const email = generateTestEmail('auth');
     
     await page.goto('/en/register');
