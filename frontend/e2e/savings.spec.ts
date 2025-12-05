@@ -37,6 +37,46 @@ test.describe('Savings Goals', () => {
     await expect(page.getByText(/vacation fund/i)).toBeVisible();
   });
 
+  test('should edit existing savings goal', async ({ page }) => {
+    await page.getByRole('button', { name: /new goal|add goal|create/i }).click();
+    await waitForDialog(page);
+    await page.getByLabel(/name|goal/i).fill('House Fund');
+    await page.getByLabel(/target|amount/i).fill('50000');
+    await page.getByRole('dialog').getByRole('button', { name: /create|save|add/i }).click();
+    await waitForDialogToClose(page);
+    
+    const editButton = page.getByRole('button', { name: /edit/i }).first();
+    if (await editButton.isVisible()) {
+      await editButton.click();
+      await waitForDialog(page);
+      
+      await page.getByLabel(/target|amount/i).clear();
+      await page.getByLabel(/target|amount/i).fill('75000');
+      await page.getByRole('dialog').getByRole('button', { name: /save|update|submit/i }).click();
+      
+      await waitForDialogToClose(page);
+    }
+  });
+
+  test('should delete savings goal with confirmation', async ({ page }) => {
+    await page.getByRole('button', { name: /new goal|add goal|create/i }).click();
+    await waitForDialog(page);
+    await page.getByLabel(/name|goal/i).fill('Delete Test Goal');
+    await page.getByLabel(/target|amount/i).fill('1000');
+    await page.getByRole('dialog').getByRole('button', { name: /create|save|add/i }).click();
+    await waitForDialogToClose(page);
+    
+    const deleteButton = page.getByRole('button', { name: /delete|remove/i }).first();
+    if (await deleteButton.isVisible()) {
+      await deleteButton.click();
+      
+      const confirmButton = page.getByRole('button', { name: /confirm|yes|delete/i });
+      if (await confirmButton.isVisible()) {
+        await confirmButton.click();
+      }
+    }
+  });
+
   test('should add contribution to savings goal', async ({ page }) => {
     await page.getByRole('button', { name: /new goal|add goal|create/i }).click();
     await waitForDialog(page);

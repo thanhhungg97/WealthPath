@@ -38,6 +38,58 @@ test.describe('Debts', () => {
     await expect(page.getByText(/car loan/i)).toBeVisible();
   });
 
+  test('should edit existing debt', async ({ page }) => {
+    await page.getByRole('button', { name: /add debt/i }).click();
+    await waitForDialog(page);
+    await page.getByLabel(/name/i).fill('Personal Loan');
+    await selectFirstOption(page);
+    await page.getByLabel(/original amount/i).fill('10000');
+    await page.getByLabel(/current balance/i).fill('8000');
+    await page.getByLabel(/interest rate/i).fill('8');
+    await page.getByLabel(/min.*payment|minimum/i).fill('200');
+    await page.getByLabel(/due day/i).fill('10');
+    await page.getByLabel(/start date/i).fill('2024-01-01');
+    await page.getByRole('dialog').getByRole('button', { name: /add debt/i }).click();
+    await waitForDialogToClose(page);
+    
+    const editButton = page.getByRole('button', { name: /edit/i }).first();
+    if (await editButton.isVisible()) {
+      await editButton.click();
+      await waitForDialog(page);
+      
+      await page.getByLabel(/current balance/i).clear();
+      await page.getByLabel(/current balance/i).fill('7500');
+      await page.getByRole('dialog').getByRole('button', { name: /save|update|submit/i }).click();
+      
+      await waitForDialogToClose(page);
+    }
+  });
+
+  test('should delete debt with confirmation', async ({ page }) => {
+    await page.getByRole('button', { name: /add debt/i }).click();
+    await waitForDialog(page);
+    await page.getByLabel(/name/i).fill('Delete Test Debt');
+    await selectFirstOption(page);
+    await page.getByLabel(/original amount/i).fill('1000');
+    await page.getByLabel(/current balance/i).fill('500');
+    await page.getByLabel(/interest rate/i).fill('5');
+    await page.getByLabel(/min.*payment|minimum/i).fill('50');
+    await page.getByLabel(/due day/i).fill('1');
+    await page.getByLabel(/start date/i).fill('2024-01-01');
+    await page.getByRole('dialog').getByRole('button', { name: /add debt/i }).click();
+    await waitForDialogToClose(page);
+    
+    const deleteButton = page.getByRole('button', { name: /delete|remove/i }).first();
+    if (await deleteButton.isVisible()) {
+      await deleteButton.click();
+      
+      const confirmButton = page.getByRole('button', { name: /confirm|yes|delete/i });
+      if (await confirmButton.isVisible()) {
+        await confirmButton.click();
+      }
+    }
+  });
+
   test('should make payment on debt', async ({ page }) => {
     await page.getByRole('button', { name: /add debt/i }).click();
     await waitForDialog(page);

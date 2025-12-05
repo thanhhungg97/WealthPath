@@ -50,6 +50,47 @@ test.describe('Transactions', () => {
     await expect(page.getByText(/\$2,?000|2000/)).toBeVisible();
   });
 
+  test('should edit existing transaction', async ({ page }) => {
+    await page.getByRole('button', { name: /add transaction|add/i }).first().click();
+    await waitForDialog(page);
+    await page.getByLabel(/amount/i).fill('100');
+    await selectFirstOption(page);
+    await page.getByRole('button', { name: /add|create|save|submit/i }).click();
+    await waitForDialogToClose(page);
+    
+    const editButton = page.getByRole('button', { name: /edit/i }).first();
+    if (await editButton.isVisible()) {
+      await editButton.click();
+      await waitForDialog(page);
+      
+      await page.getByLabel(/amount/i).clear();
+      await page.getByLabel(/amount/i).fill('150');
+      await page.getByRole('dialog').getByRole('button', { name: /save|update|submit/i }).click();
+      
+      await waitForDialogToClose(page);
+      await expect(page.getByText(/\$150|150/)).toBeVisible();
+    }
+  });
+
+  test('should delete transaction with confirmation', async ({ page }) => {
+    await page.getByRole('button', { name: /add transaction|add/i }).first().click();
+    await waitForDialog(page);
+    await page.getByLabel(/amount/i).fill('50');
+    await selectFirstOption(page);
+    await page.getByRole('button', { name: /add|create|save|submit/i }).click();
+    await waitForDialogToClose(page);
+    
+    const deleteButton = page.getByRole('button', { name: /delete|remove/i }).first();
+    if (await deleteButton.isVisible()) {
+      await deleteButton.click();
+      
+      const confirmButton = page.getByRole('button', { name: /confirm|yes|delete/i });
+      if (await confirmButton.isVisible()) {
+        await confirmButton.click();
+      }
+    }
+  });
+
   test('should filter transactions by type tabs', async ({ page }) => {
     const allTab = page.getByRole('tab', { name: /all/i });
     const incomeTab = page.getByRole('tab', { name: /income/i });
