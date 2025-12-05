@@ -56,6 +56,9 @@ jobs:
           FACEBOOK_APP_SECRET: ${{ secrets.FACEBOOK_APP_SECRET }}
           # AI
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Admin Panel
+          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
         run: |
           echo "🚀 Deploying version $IMAGE_TAG"
           ansible-playbook playbook.yml -v

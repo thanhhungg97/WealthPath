@@ -22,6 +22,11 @@
   set_fact:
     acme_ca: "{{ 'https://acme.zerossl.com/v2/DV90' if (use_zerossl == 'true' and use_ssl == 'true') else '' }}"
 
+- name: Set admin credentials from env vars or secrets.yml
+  set_fact:
+    admin_username: "{{ lookup('env', 'ADMIN_USERNAME') or admin_username | default('admin') }}"
+    admin_password: "{{ lookup('env', 'ADMIN_PASSWORD') or admin_password | default('') }}"
+
 - name: Check if .env exists
   stat:
     path: "{{ app_dir }}/.env"
