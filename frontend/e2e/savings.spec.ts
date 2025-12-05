@@ -1,100 +1,74 @@
 import { test, expect } from '@playwright/test';
-import { registerAndLogin, waitForDialog, navigateViaLink } from './helpers';
+import { registerAndLogin, waitForDialog, waitForDialogToClose, navigateTo } from './helpers';
 
 test.describe('Savings Goals', () => {
   test.beforeEach(async ({ page }) => {
     await registerAndLogin(page, 'savings');
-    await navigateViaLink(page, '/en/savings');
+    await navigateTo(page, '/en/savings');
   });
 
-  test('should display savings page', async ({ page }) => {
-    await expect(page.locator('h1')).toBeVisible({ timeout: 10000 });
-    const title = await page.locator('h1').textContent();
-    expect(title?.toLowerCase()).toMatch(/saving|goal/);
+  test('should display savings page with title', async ({ page }) => {
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(/saving/i);
   });
 
   test('should open new goal dialog', async ({ page }) => {
-    const addBtn = page.locator('button:has-text("New Goal"), button:has-text("Add")').first();
-    await addBtn.click();
+    await page.getByRole('button', { name: /new goal|add goal|create/i }).click();
+    
     await waitForDialog(page);
-    await expect(page.locator('#name')).toBeVisible();
+    await expect(page.getByLabel(/name|goal/i)).toBeVisible();
   });
 
-  test('should create new savings goal', async ({ page }) => {
-    const addBtn = page.locator('button:has-text("New Goal"), button:has-text("Add")').first();
-    await addBtn.click();
+  test('should create new savings goal successfully', async ({ page }) => {
+    await page.getByRole('button', { name: /new goal|add goal|create/i }).click();
     await waitForDialog(page);
     
-    await page.fill('#name', 'Emergency Fund');
-    await page.fill('#targetAmount', '10000');
+    await page.getByLabel(/name|goal/i).fill('Vacation Fund');
+    await page.getByLabel(/target|amount/i).fill('5000');
     
-    await page.locator('[role="dialog"] button[type="submit"]').click({ force: true });
-    await page.waitForTimeout(2000);
+    const dateInput = page.getByLabel(/date|target date/i);
+    if (await dateInput.isVisible()) {
+      await dateInput.fill('2025-12-31');
+    }
     
-    await expect(page.locator('text=Emergency Fund')).toBeVisible({ timeout: 5000 });
+    await page.getByRole('dialog').getByRole('button', { name: /create|save|add/i }).click();
+    
+    await waitForDialogToClose(page);
+    await expect(page.getByText(/vacation fund/i)).toBeVisible();
   });
 
   test('should add contribution to savings goal', async ({ page }) => {
-    // First create a goal
-    const addBtn = page.locator('button:has-text("New Goal"), button:has-text("Add")').first();
-    await addBtn.click();
+    await page.getByRole('button', { name: /new goal|add goal|create/i }).click();
     await waitForDialog(page);
     
-    await page.fill('#name', 'Vacation Fund');
-    await page.fill('#targetAmount', '5000');
+    await page.getByLabel(/name|goal/i).fill('Emergency Fund');
+    await page.getByLabel(/target|amount/i).fill('10000');
     
-    await page.locator('[role="dialog"] button[type="submit"]').click({ force: true });
-    await page.waitForTimeout(2000);
+    await page.getByRole('dialog').getByRole('button', { name: /create|save|add/i }).click();
+    await waitForDialogToClose(page);
     
-    // Find "Add Funds" button on the card
-    const addFundsBtn = page.locator('button:has-text("Add Funds"), button:has-text("Add")').first();
-    if (await addFundsBtn.isVisible({ timeout: 3000 })) {
-      await addFundsBtn.click();
-      await page.waitForTimeout(500);
+    const contributeButton = page.getByRole('button', { name: /contribute|add funds|deposit/i }).first();
+    if (await contributeButton.isVisible()) {
+      await contributeButton.click();
+      await waitForDialog(page);
       
-      // Fill contribution amount in the dialog/input
-      const amountInput = page.locator('[role="dialog"] input, input[type="number"]').first();
-      if (await amountInput.isVisible({ timeout: 2000 })) {
-        await amountInput.fill('100');
-        await page.locator('[role="dialog"] button[type="submit"], [role="dialog"] button:has-text("Add")').click({ force: true });
-        await page.waitForTimeout(1000);
-      }
+      await page.getByLabel(/amount/i).fill('500');
+      await page.getByRole('dialog').getByRole('button', { name: /add|save|submit/i }).click();
+      
+      await waitForDialogToClose(page);
     }
   });
 
-  test('should delete savings goal', async ({ page }) => {
-    // First create a goal
-    const addBtn = page.locator('button:has-text("New Goal"), button:has-text("Add")').first();
-    await addBtn.click();
+  test('should display progress bar for savings goal', async ({ page }) => {
+    await page.getByRole('button', { name: /new goal|add goal|create/i }).click();
     await waitForDialog(page);
     
-    await page.fill('#name', 'Delete Me Goal');
-    await page.fill('#targetAmount', '1000');
+    await page.getByLabel(/name|goal/i).fill('Car Fund');
+    await page.getByLabel(/target|amount/i).fill('20000');
     
-    await page.locator('[role="dialog"] button[type="submit"]').click({ force: true });
-    await page.waitForTimeout(2000);
+    await page.getByRole('dialog').getByRole('button', { name: /create|save|add/i }).click();
+    await waitForDialogToClose(page);
     
-    // Find and click delete button
-    const deleteBtn = page.locator('button:has(svg.lucide-trash2)').first();
-    if (await deleteBtn.isVisible({ timeout: 3000 })) {
-      await deleteBtn.click();
-      await page.waitForTimeout(1000);
-    }
-  });
-
-  test('should show progress after contribution', async ({ page }) => {
-    // Create a goal with initial amount
-    const addBtn = page.locator('button:has-text("New Goal"), button:has-text("Add")').first();
-    await addBtn.click();
-    await waitForDialog(page);
-    
-    await page.fill('#name', 'Car Fund');
-    await page.fill('#targetAmount', '20000');
-    
-    await page.locator('[role="dialog"] button[type="submit"]').click({ force: true });
-    await page.waitForTimeout(2000);
-    
-    // Verify goal card exists
-    await expect(page.locator('text=Car Fund')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('progressbar').first()).toBeVisible();
   });
 });

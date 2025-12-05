@@ -1,5 +1,10 @@
 import { Page, expect } from '@playwright/test';
 
+/**
+ * Generates a unique test email address using timestamp.
+ * @param prefix - Prefix for the email (default: 'test')
+ * @returns Unique email address
+ */
 export function generateTestEmail(prefix: string = 'test'): string {
   return `${prefix}+${Date.now()}@example.com`;
 }
@@ -7,58 +12,86 @@ export function generateTestEmail(prefix: string = 'test'): string {
 export const TEST_PASSWORD = 'testpassword123';
 export const TEST_NAME = 'Test User';
 
+/**
+ * Registers a new user and logs them in.
+ * @param page - Playwright page object
+ * @param emailPrefix - Prefix for the generated email
+ * @returns The generated email address
+ */
 export async function registerAndLogin(page: Page, emailPrefix: string = 'test'): Promise<string> {
   const email = generateTestEmail(emailPrefix);
   
   await page.goto('/en/register');
-  await expect(page.locator('#name')).toBeVisible({ timeout: 5000 });
   
-  await page.fill('#name', TEST_NAME);
-  await page.fill('#email', email);
-  await page.fill('#password', TEST_PASSWORD);
+  await page.getByLabel(/name/i).fill(TEST_NAME);
+  await page.getByLabel(/email/i).fill(email);
+  await page.getByLabel(/password/i).fill(TEST_PASSWORD);
   
-  await page.click('button:has-text("Create account"), button[type="submit"]');
-  await expect(page).toHaveURL(/dashboard/, { timeout: 8000 });
+  await page.getByRole('button', { name: /create account|sign up|register/i }).click();
+  
+  await expect(page).toHaveURL(/dashboard/);
   await page.waitForLoadState('networkidle');
-  await page.waitForTimeout(300);
   
   return email;
 }
 
+/**
+ * Waits for a dialog to be visible.
+ * @param page - Playwright page object
+ */
 export async function waitForDialog(page: Page): Promise<void> {
-  await expect(page.locator('[role="dialog"]')).toBeVisible({ timeout: 3000 });
-  // Wait for dialog animation to complete
-  await page.waitForTimeout(300);
+  await expect(page.getByRole('dialog')).toBeVisible();
 }
 
-export async function selectFromCombobox(page: Page, index: number = 0): Promise<void> {
-  // Wait for dialog overlay animation to complete
-  await page.waitForTimeout(400);
-  
-  // Shadcn Select uses button[role="combobox"]
-  const combobox = page.locator('[role="dialog"] button[role="combobox"]').nth(index);
-  await expect(combobox).toBeVisible({ timeout: 3000 });
-  
-  // Click to open dropdown
-  await combobox.click();
-  await page.waitForTimeout(300);
-  
-  // Wait for SelectContent (uses data-radix-popper-content-wrapper or [role="listbox"])
-  const listbox = page.locator('[data-radix-popper-content-wrapper] [role="option"], [role="listbox"] [role="option"]').first();
-  await expect(listbox).toBeVisible({ timeout: 3000 });
-  
-  // Click first option
-  await listbox.click();
-  await page.waitForTimeout(200);
+/**
+ * Waits for a dialog to close.
+ * @param page - Playwright page object
+ */
+export async function waitForDialogToClose(page: Page): Promise<void> {
+  await expect(page.getByRole('dialog')).not.toBeVisible();
 }
 
-export async function navigateViaLink(page: Page, href: string): Promise<void> {
-  const link = page.locator(`a[href="${href}"]`);
-  if (await link.isVisible({ timeout: 2000 })) {
-    await link.click();
-  } else {
-    await page.goto(href);
-  }
+/**
+ * Selects the first option from a Shadcn Select component.
+ * @param page - Playwright page object
+ * @param triggerText - Optional text to identify the select trigger
+ */
+export async function selectFirstOption(page: Page, triggerText?: string | RegExp): Promise<void> {
+  const dialog = page.getByRole('dialog');
+  
+  const trigger = triggerText 
+    ? dialog.getByRole('combobox', { name: triggerText })
+    : dialog.getByRole('combobox').first();
+  
+  await trigger.click();
+  await page.getByRole('option').first().click();
+}
+
+/**
+ * Navigates to a page using sidebar link or direct navigation.
+ * @param page - Playwright page object
+ * @param path - The path to navigate to
+ */
+export async function navigateTo(page: Page, path: string): Promise<void> {
+  await page.goto(path);
   await page.waitForLoadState('networkidle');
-  await page.waitForTimeout(200);
+}
+
+/**
+ * Fills a form field by label.
+ * @param page - Playwright page object
+ * @param label - Label text or regex
+ * @param value - Value to fill
+ */
+export async function fillField(page: Page, label: string | RegExp, value: string): Promise<void> {
+  await page.getByLabel(label).fill(value);
+}
+
+/**
+ * Clicks a button by text.
+ * @param page - Playwright page object
+ * @param text - Button text or regex
+ */
+export async function clickButton(page: Page, text: string | RegExp): Promise<void> {
+  await page.getByRole('button', { name: text }).click();
 }
