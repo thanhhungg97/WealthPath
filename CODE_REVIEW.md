@@ -399,3 +399,4 @@ db.SetConnMaxLifetime(5 * time.Minute)
 - `frontend/src/lib/api.ts` - Error handling improvements needed
 
 
+

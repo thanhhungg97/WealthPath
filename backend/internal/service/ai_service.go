@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/wealthpath/backend/internal/model"
+	"github.com/wealthpath/backend/pkg/datetime"
 )
 
 // AIService handles natural language processing for financial actions.
@@ -216,7 +217,7 @@ func (s *AIService) addTransaction(ctx context.Context, userID uuid.UUID, intent
 		Amount:      decimal.NewFromFloat(intent.Amount),
 		Category:    intent.Category,
 		Description: intent.Description,
-		Date:        DateString(time.Now()),
+		Date:        datetime.Today(),
 	}
 
 	tx, err := s.transactionService.Create(ctx, userID, input)

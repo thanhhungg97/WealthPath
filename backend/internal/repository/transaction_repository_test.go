@@ -380,3 +380,4 @@ func TestErrTransactionNotFound(t *testing.T) {
 	assert.Error(t, ErrTransactionNotFound)
 	assert.Equal(t, "transaction not found", ErrTransactionNotFound.Error())
 }
+

@@ -114,3 +114,4 @@ func TestLoggerWithProductionEnv(t *testing.T) {
 	l := Logger()
 	assert.NotNil(t, l)
 }
+

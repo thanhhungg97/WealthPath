@@ -269,3 +269,4 @@ func TestErrBudgetNotFound(t *testing.T) {
 	assert.Error(t, ErrBudgetNotFound)
 	assert.Equal(t, "budget not found", ErrBudgetNotFound.Error())
 }
+

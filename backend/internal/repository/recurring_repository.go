@@ -114,3 +114,4 @@ func (r *RecurringRepository) GetUpcoming(ctx context.Context, userID uuid.UUID,
 	err := r.db.SelectContext(ctx, &items, query, userID, limit)
 	return items, err
 }
+

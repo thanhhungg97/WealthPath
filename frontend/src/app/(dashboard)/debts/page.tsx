@@ -1,14 +1,21 @@
 "use client"
 
-import { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { api, Debt, CreateDebtInput, PayoffPlan } from "@/lib/api"
-import { formatCurrency, formatDate, formatPercent } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
+import {
+  Calculator,
+  Calendar,
+  Car,
+  CreditCard,
+  DollarSign,
+  GraduationCap,
+  Home,
+  Loader2,
+  Plus,
+  Trash2,
+  TrendingDown,
+  Wallet,
+} from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { CreateDebtInput, Debt, PayoffPlan, api } from "@/lib/api"
 import {
   Dialog,
   DialogContent,
@@ -23,21 +30,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { formatCurrency, formatDate, formatPercent, toAPIDate } from "@/lib/utils"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
+import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
-import {
-  Plus,
-  Trash2,
-  Loader2,
-  CreditCard,
-  DollarSign,
-  Calendar,
-  TrendingDown,
-  Calculator,
-  Home,
-  Car,
-  GraduationCap,
-  Wallet,
-} from "lucide-react"
 
 const DEBT_TYPES = [
   { value: "mortgage", label: "Mortgage", icon: Home },
@@ -79,7 +80,7 @@ export default function DebtsPage() {
 
   const paymentMutation = useMutation({
     mutationFn: ({ id, amount }: { id: string; amount: number }) =>
-      api.makeDebtPayment(id, amount, new Date().toISOString().split("T")[0]),
+      api.makeDebtPayment(id, amount, toAPIDate(new Date())),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["debts"] })
       queryClient.invalidateQueries({ queryKey: ["dashboard"] })

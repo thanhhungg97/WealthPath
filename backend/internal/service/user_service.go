@@ -13,6 +13,7 @@ import (
 
 	"github.com/wealthpath/backend/internal/model"
 	"github.com/wealthpath/backend/internal/repository"
+	"github.com/wealthpath/backend/pkg/currency"
 )
 
 // Service-level errors for authentication and user management.
@@ -79,15 +80,20 @@ func (s *UserService) Register(ctx context.Context, input RegisterInput) (*AuthR
 		return nil, fmt.Errorf("hashing password: %w", err)
 	}
 
+	curr := input.Currency
+	if curr == "" {
+		curr = string(currency.DefaultCurrency)
+	}
+	if !currency.IsValid(curr) {
+		return nil, ErrUnsupportedCurrency
+	}
+
 	hashStr := string(hash)
 	user := &model.User{
 		Email:        input.Email,
 		PasswordHash: &hashStr,
 		Name:         input.Name,
-		Currency:     input.Currency,
-	}
-	if user.Currency == "" {
-		user.Currency = "USD"
+		Currency:     curr,
 	}
 
 	if err := s.repo.Create(ctx, user); err != nil {
@@ -138,8 +144,9 @@ func (s *UserService) GetByID(ctx context.Context, id uuid.UUID) (*model.User, e
 	return user, nil
 }
 
-// Supported currencies
-var SupportedCurrencies = []string{"USD", "EUR", "GBP", "VND", "JPY", "CNY", "KRW", "SGD", "AUD", "CAD"}
+// SupportedCurrencies returns the list of supported currency codes.
+// Deprecated: Use currency.SupportedCurrencyCodes() instead.
+var SupportedCurrencies = currency.SupportedCurrencyCodes()
 
 type UpdateSettingsInput struct {
 	Name     *string `json:"name"`
@@ -147,7 +154,7 @@ type UpdateSettingsInput struct {
 }
 
 // UpdateSettings updates user profile settings (name, currency).
-// Returns ErrUnsupportedCurrency if the currency is not in SupportedCurrencies.
+// Returns ErrUnsupportedCurrency if the currency is not supported.
 func (s *UserService) UpdateSettings(ctx context.Context, userID uuid.UUID, input UpdateSettingsInput) (*model.User, error) {
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
@@ -159,7 +166,7 @@ func (s *UserService) UpdateSettings(ctx context.Context, userID uuid.UUID, inpu
 	}
 
 	if input.Currency != nil && *input.Currency != "" {
-		if !isValidCurrency(*input.Currency) {
+		if !currency.IsValid(*input.Currency) {
 			return nil, ErrUnsupportedCurrency
 		}
 		user.Currency = *input.Currency
@@ -170,16 +177,6 @@ func (s *UserService) UpdateSettings(ctx context.Context, userID uuid.UUID, inpu
 	}
 
 	return user, nil
-}
-
-// isValidCurrency checks if the currency is supported.
-func isValidCurrency(currency string) bool {
-	for _, c := range SupportedCurrencies {
-		if c == currency {
-			return true
-		}
-	}
-	return false
 }
 
 // GenerateTokenForTest generates a JWT token for testing purposes.

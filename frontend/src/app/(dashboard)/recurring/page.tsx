@@ -1,19 +1,24 @@
 "use client"
 
-import { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
-  api,
-  RecurringTransaction,
+  ArrowDownRight,
+  ArrowUpRight,
+  Calendar,
+  Loader2,
+  MoreVertical,
+  Pause,
+  Play,
+  Plus,
+  RefreshCw,
+  Trash2,
+} from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
   CreateRecurringInput,
   FREQUENCY_OPTIONS,
+  RecurringTransaction,
+  api,
 } from "@/lib/api"
-import { formatCurrency, formatDate } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
   DialogContent,
@@ -22,31 +27,27 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { formatCurrency, formatDate, toAPIDate } from "@/lib/utils"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
-import {
-  Plus,
-  ArrowUpRight,
-  ArrowDownRight,
-  Trash2,
-  Loader2,
-  MoreVertical,
-  Pause,
-  Play,
-  Calendar,
-  RefreshCw,
-} from "lucide-react"
 
 const EXPENSE_CATEGORIES = [
   "Housing",
@@ -254,7 +255,7 @@ export default function RecurringPage() {
                   id="startDate"
                   name="startDate"
                   type="date"
-                  defaultValue={new Date().toISOString().split("T")[0]}
+                  defaultValue={toAPIDate(new Date())}
                   required
                 />
               </div>

@@ -1,13 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { api, Transaction, CreateTransactionInput } from "@/lib/api"
-import { formatCurrency, formatDate } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Loader2,
+  Plus,
+  Trash2,
+} from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { CreateTransactionInput, Transaction, api } from "@/lib/api"
 import {
   Dialog,
   DialogContent,
@@ -23,14 +24,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { formatCurrency, formatDate, toAPIDate } from "@/lib/utils"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
-import {
-  Plus,
-  ArrowUpRight,
-  ArrowDownRight,
-  Trash2,
-  Loader2,
-} from "lucide-react"
 
 const EXPENSE_CATEGORIES = [
   "Housing",
@@ -192,7 +193,7 @@ export default function TransactionsPage() {
                   id="date"
                   name="date"
                   type="date"
-                  defaultValue={new Date().toISOString().split("T")[0]}
+                  defaultValue={toAPIDate(new Date())}
                   required
                 />
               </div>

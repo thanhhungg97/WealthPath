@@ -76,3 +76,4 @@ type RecurringRepositoryInterface interface {
 	GetDueTransactions(ctx context.Context, now time.Time) ([]model.RecurringTransaction, error)
 	UpdateLastGenerated(ctx context.Context, id uuid.UUID, lastGenerated, nextOccurrence time.Time) error
 }
+

@@ -211,3 +211,4 @@ func TestOAuthUser_Struct(t *testing.T) {
 	assert.Equal(t, "Test User", user.Name)
 	assert.Equal(t, "https://example.com/avatar.jpg", user.AvatarURL)
 }
+

@@ -101,3 +101,4 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 		assert.True(t, nextCalled)
 	}
 }
+

@@ -5,7 +5,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,37 +12,9 @@ import (
 
 	"github.com/wealthpath/backend/internal/model"
 	"github.com/wealthpath/backend/internal/repository"
+	"github.com/wealthpath/backend/pkg/currency"
+	"github.com/wealthpath/backend/pkg/datetime"
 )
-
-// DateString handles both "2006-01-02" and RFC3339 date formats for JSON unmarshalling.
-type DateString time.Time
-
-func (d *DateString) UnmarshalJSON(b []byte) error {
-	s := strings.Trim(string(b), "\"")
-	if s == "" || s == "null" {
-		return nil
-	}
-
-	// Try RFC3339 first
-	t, err := time.Parse(time.RFC3339, s)
-	if err == nil {
-		*d = DateString(t)
-		return nil
-	}
-
-	// Try date only format
-	t, err = time.Parse("2006-01-02", s)
-	if err == nil {
-		*d = DateString(t)
-		return nil
-	}
-
-	return err
-}
-
-func (d DateString) Time() time.Time {
-	return time.Time(d)
-}
 
 // TransactionRepositoryInterface defines the contract for transaction data access.
 // Implementations must be safe for concurrent use.
@@ -73,7 +44,7 @@ type CreateTransactionInput struct {
 	Currency    string                `json:"currency"`
 	Category    string                `json:"category"`
 	Description string                `json:"description"`
-	Date        DateString            `json:"date"`
+	Date        datetime.Date         `json:"date"`
 }
 
 type UpdateTransactionInput struct {
@@ -82,7 +53,7 @@ type UpdateTransactionInput struct {
 	Currency    string                `json:"currency"`
 	Category    string                `json:"category"`
 	Description string                `json:"description"`
-	Date        DateString            `json:"date"`
+	Date        datetime.Date         `json:"date"`
 }
 
 type ListTransactionsInput struct {
@@ -95,20 +66,24 @@ type ListTransactionsInput struct {
 }
 
 // Create validates and persists a new transaction for the given user.
-// It sets default currency to USD if not specified.
+// It sets default currency to USD if not specified and validates the currency code.
 func (s *TransactionService) Create(ctx context.Context, userID uuid.UUID, input CreateTransactionInput) (*model.Transaction, error) {
+	curr := input.Currency
+	if curr == "" {
+		curr = string(currency.DefaultCurrency)
+	}
+	if !currency.IsValid(curr) {
+		return nil, fmt.Errorf("invalid currency code: %s", curr)
+	}
+
 	tx := &model.Transaction{
 		UserID:      userID,
 		Type:        input.Type,
 		Amount:      input.Amount,
-		Currency:    input.Currency,
+		Currency:    curr,
 		Category:    input.Category,
 		Description: input.Description,
-		Date:        input.Date.Time(),
-	}
-
-	if tx.Currency == "" {
-		tx.Currency = "USD"
+		Date:        input.Date.Time,
 	}
 
 	if err := s.repo.Create(ctx, tx); err != nil {
@@ -166,12 +141,19 @@ func (s *TransactionService) Update(ctx context.Context, id uuid.UUID, userID uu
 		return nil, repository.ErrTransactionNotFound
 	}
 
+	curr := input.Currency
+	if curr != "" && !currency.IsValid(curr) {
+		return nil, fmt.Errorf("invalid currency code: %s", curr)
+	}
+
 	tx.Type = input.Type
 	tx.Amount = input.Amount
-	tx.Currency = input.Currency
+	if curr != "" {
+		tx.Currency = curr
+	}
 	tx.Category = input.Category
 	tx.Description = input.Description
-	tx.Date = input.Date.Time()
+	tx.Date = input.Date.Time
 
 	if err := s.repo.Update(ctx, tx); err != nil {
 		return nil, fmt.Errorf("updating transaction %s: %w", id, err)

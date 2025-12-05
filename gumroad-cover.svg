@@ -1,0 +1,113 @@
+<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="50%" style="stop-color:#1e1b4b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8b5cf6"/>
+      <stop offset="100%" style="stop-color:#06b6d4"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="600" height="600" fill="url(#bg)"/>
+  
+  <!-- Decorative grid -->
+  <g opacity="0.1" stroke="#8b5cf6" stroke-width="0.5">
+    <line x1="0" y1="100" x2="600" y2="100"/>
+    <line x1="0" y1="200" x2="600" y2="200"/>
+    <line x1="0" y1="300" x2="600" y2="300"/>
+    <line x1="0" y1="400" x2="600" y2="400"/>
+    <line x1="0" y1="500" x2="600" y2="500"/>
+    <line x1="100" y1="0" x2="100" y2="600"/>
+    <line x1="200" y1="0" x2="200" y2="600"/>
+    <line x1="300" y1="0" x2="300" y2="600"/>
+    <line x1="400" y1="0" x2="400" y2="600"/>
+    <line x1="500" y1="0" x2="500" y2="600"/>
+  </g>
+  
+  <!-- Decorative circles -->
+  <circle cx="500" cy="100" r="80" fill="none" stroke="#8b5cf6" stroke-width="1" opacity="0.2"/>
+  <circle cx="100" cy="500" r="60" fill="none" stroke="#06b6d4" stroke-width="1" opacity="0.2"/>
+  
+  <!-- Code window decoration -->
+  <rect x="60" y="140" width="480" height="280" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <circle cx="90" cy="165" r="6" fill="#ef4444"/>
+  <circle cx="112" cy="165" r="6" fill="#eab308"/>
+  <circle cx="134" cy="165" r="6" fill="#22c55e"/>
+  
+  <!-- Code lines -->
+  <g font-family="monospace" font-size="14" fill="#94a3b8">
+    <text x="80" y="210" fill="#c084fc">package</text>
+    <text x="150" y="210" fill="#e2e8f0">main</text>
+    
+    <text x="80" y="235" fill="#64748b">// Clean Architecture</text>
+    
+    <text x="80" y="260" fill="#c084fc">func</text>
+    <text x="120" y="260" fill="#22d3ee">NewServer</text>
+    <text x="210" y="260" fill="#e2e8f0">() *Server {</text>
+    
+    <text x="100" y="285" fill="#c084fc">return</text>
+    <text x="155" y="285" fill="#e2e8f0">&amp;Server{</text>
+    
+    <text x="120" y="310" fill="#94a3b8">handler:</text>
+    <text x="195" y="310" fill="#22d3ee">NewHandler</text>
+    <text x="290" y="310" fill="#e2e8f0">(),</text>
+    
+    <text x="120" y="335" fill="#94a3b8">service:</text>
+    <text x="195" y="335" fill="#22d3ee">NewService</text>
+    <text x="290" y="335" fill="#e2e8f0">(),</text>
+    
+    <text x="120" y="360" fill="#94a3b8">repo:</text>
+    <text x="175" y="360" fill="#22d3ee">NewRepository</text>
+    <text x="305" y="360" fill="#e2e8f0">(),</text>
+    
+    <text x="100" y="385" fill="#e2e8f0">}</text>
+    <text x="80" y="410" fill="#e2e8f0">}</text>
+  </g>
+  
+  <!-- Main title -->
+  <text x="300" y="480" text-anchor="middle" font-family="system-ui, sans-serif" font-size="42" font-weight="700" fill="white" filter="url(#glow)">
+    Go + Next.js
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="300" y="520" text-anchor="middle" font-family="system-ui, sans-serif" font-size="28" font-weight="600" fill="url(#accent)">
+    SaaS Starter Kit
+  </text>
+  
+  <!-- Badge -->
+  <rect x="200" y="545" width="200" height="32" rx="16" fill="#8b5cf6" opacity="0.2"/>
+  <rect x="200" y="545" width="200" height="32" rx="16" fill="none" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="300" y="567" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#c4b5fd">
+    Production Ready 🚀
+  </text>
+  
+  <!-- Tech badges at bottom -->
+  <g font-family="system-ui, sans-serif" font-size="11" font-weight="500">
+    <rect x="80" y="85" width="65" height="24" rx="4" fill="#00ADD8" opacity="0.9"/>
+    <text x="112" y="101" text-anchor="middle" fill="white">Go</text>
+    
+    <rect x="155" y="85" width="75" height="24" rx="4" fill="#000000" opacity="0.9"/>
+    <text x="192" y="101" text-anchor="middle" fill="white">Next.js</text>
+    
+    <rect x="240" y="85" width="85" height="24" rx="4" fill="#336791" opacity="0.9"/>
+    <text x="282" y="101" text-anchor="middle" fill="white">PostgreSQL</text>
+    
+    <rect x="335" y="85" width="80" height="24" rx="4" fill="#3178C6" opacity="0.9"/>
+    <text x="375" y="101" text-anchor="middle" fill="white">TypeScript</text>
+    
+    <rect x="425" y="85" width="70" height="24" rx="4" fill="#2496ED" opacity="0.9"/>
+    <text x="460" y="101" text-anchor="middle" fill="white">Docker</text>
+  </g>
+</svg>
+

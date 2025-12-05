@@ -576,3 +576,4 @@ func TestAPI_NotFound(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
+

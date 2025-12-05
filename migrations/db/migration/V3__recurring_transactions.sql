@@ -26,3 +26,4 @@ CREATE INDEX IF NOT EXISTS idx_recurring_next_occurrence ON recurring_transactio
 CREATE INDEX IF NOT EXISTS idx_recurring_active ON recurring_transactions(is_active);
 
 
+
