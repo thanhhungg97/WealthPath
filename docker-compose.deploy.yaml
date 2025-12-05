@@ -75,6 +75,24 @@ services:
       - backend
     restart: always
 
+  admin:
+    image: ghcr.io/thanhhungg97/wealthpath-admin:latest
+    expose:
+      - "8081"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      PORT: "8081"
+      DATABASE_URL: jdbc:postgresql://host.docker.internal:5432/${POSTGRES_DB:-wealthpath}
+      DB_USER: ${POSTGRES_USER:-wealthpath}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+    restart: always
+
 volumes:
   caddy_data:
   caddy_config:
