@@ -1,0 +1,121 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - generic:
+          - img
+        - generic: WealthPath
+      - navigation:
+        - link:
+          - /url: /en/dashboard
+          - img
+          - text: Dashboard
+        - link:
+          - /url: /en/transactions
+          - img
+          - text: Transactions
+        - link:
+          - /url: /en/recurring
+          - img
+          - text: Recurring Transactions
+        - link:
+          - /url: /en/budgets
+          - img
+          - text: Budgets
+        - link:
+          - /url: /en/savings
+          - img
+          - text: Savings Goals
+        - link:
+          - /url: /en/debts
+          - img
+          - text: Debt Manager
+        - link:
+          - /url: /en/calculator
+          - img
+          - text: Calculator
+      - generic:
+        - generic:
+          - generic: T
+          - generic:
+            - paragraph: Test User
+            - paragraph: savings+1764954126267@example.com
+        - generic:
+          - combobox:
+            - img
+            - generic: English
+            - img
+        - generic:
+          - link:
+            - /url: /en/settings
+            - img
+            - text: Settings
+          - button:
+            - img
+    - main:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: Savings Goals
+              - paragraph: Track your progress toward financial goals
+            - button [expanded]:
+              - img
+              - text: New Goal
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - img
+                  - generic:
+                    - paragraph: Total Saved
+                    - paragraph: $0.00
+                    - paragraph: of $0.00 target
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - paragraph: Active Goals
+                    - paragraph: "0"
+                  - generic:
+                    - paragraph: Avg Progress
+                    - paragraph: 0%
+          - generic:
+            - generic:
+              - img
+              - paragraph: No savings goals yet
+              - paragraph: Create a goal to start saving toward your dreams
+    - button:
+      - img
+  - list
+  - alert
+  - generic: "0"
+  - dialog "Add Savings Goal" [ref=e2]:
+    - heading "Add Savings Goal" [level=2] [ref=e4]
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - text: Goal Name
+        - textbox "Goal Name" [active] [ref=e7]:
+          - /placeholder: e.g., Emergency Fund, Vacation...
+      - generic [ref=e8]:
+        - text: Target Amount
+        - generic [ref=e9]:
+          - textbox "Target Amount" [ref=e11]:
+            - /placeholder: 0 or 5m, 500k...
+          - generic [ref=e12]:
+            - button "+10" [ref=e13] [cursor=pointer]
+            - button "+50" [ref=e14] [cursor=pointer]
+            - button "+100" [ref=e15] [cursor=pointer]
+            - button "+500" [ref=e16] [cursor=pointer]
+      - generic [ref=e17]:
+        - text: Target Date (optional)
+        - textbox "Target Date (optional)" [ref=e18]
+      - button "Create Goal" [ref=e19] [cursor=pointer]
+    - button "Close" [ref=e20] [cursor=pointer]:
+      - img [ref=e21]
+      - generic [ref=e24]: Close
+```

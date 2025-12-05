@@ -1,0 +1,97 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img [ref=e6]
+        - generic [ref=e9]: WealthPath
+      - navigation [ref=e10]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /en/dashboard
+          - img [ref=e12]
+          - text: Dashboard
+        - link "Transactions" [ref=e17] [cursor=pointer]:
+          - /url: /en/transactions
+          - img [ref=e18]
+          - text: Transactions
+        - link "Recurring Transactions" [ref=e21] [cursor=pointer]:
+          - /url: /en/recurring
+          - img [ref=e22]
+          - text: Recurring Transactions
+        - link "Budgets" [ref=e27] [cursor=pointer]:
+          - /url: /en/budgets
+          - img [ref=e28]
+          - text: Budgets
+        - link "Savings Goals" [ref=e31] [cursor=pointer]:
+          - /url: /en/savings
+          - img [ref=e32]
+          - text: Savings Goals
+        - link "Debt Manager" [ref=e36] [cursor=pointer]:
+          - /url: /en/debts
+          - img [ref=e37]
+          - text: Debt Manager
+        - link "Calculator" [ref=e39] [cursor=pointer]:
+          - /url: /en/calculator
+          - img [ref=e40]
+          - text: Calculator
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - generic [ref=e44]: T
+          - generic [ref=e45]:
+            - paragraph [ref=e46]: Test User
+            - paragraph [ref=e47]: calculator+1764954087341@example.com
+        - combobox [ref=e49] [cursor=pointer]:
+          - img [ref=e50]
+          - generic: English
+          - img [ref=e53]
+        - generic [ref=e55]:
+          - link "Settings" [ref=e56] [cursor=pointer]:
+            - /url: /en/settings
+            - img
+            - text: Settings
+          - button [ref=e57] [cursor=pointer]:
+            - img
+    - main [ref=e58]:
+      - generic [ref=e60]:
+        - generic [ref=e61]:
+          - heading "Financial Calculator" [level=1] [ref=e62]
+          - paragraph [ref=e63]: Calculate loan payments and savings projections
+        - generic [ref=e64]:
+          - tablist [ref=e65]:
+            - tab "Loan Calculator" [selected] [ref=e66] [cursor=pointer]
+            - tab "Savings Calculator" [ref=e67] [cursor=pointer]
+          - tabpanel "Loan Calculator" [ref=e68]:
+            - generic [ref=e70]:
+              - generic [ref=e71]:
+                - heading "Loan Details" [level=3] [ref=e72]:
+                  - img [ref=e73]
+                  - text: Loan Details
+                - paragraph [ref=e75]: Calculate your monthly payment and total interest
+              - generic [ref=e76]:
+                - generic [ref=e77]:
+                  - generic [ref=e78]:
+                    - img [ref=e79]
+                    - text: Loan Amount
+                  - spinbutton "Loan Amount" [ref=e81]
+                - generic [ref=e82]:
+                  - generic [ref=e83]:
+                    - img [ref=e84]
+                    - text: Annual Interest Rate (%)
+                  - spinbutton "Annual Interest Rate (%)" [ref=e88]
+                - generic [ref=e89]:
+                  - generic [ref=e90]:
+                    - img [ref=e91]
+                    - text: Loan Term (months)
+                  - spinbutton "Loan Term (months)" [ref=e93]
+                - button "Calculate" [disabled]:
+                  - img
+                  - text: Calculate
+    - button [ref=e94] [cursor=pointer]:
+      - img
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e95]
+  - generic [ref=e96]: "0"
+```

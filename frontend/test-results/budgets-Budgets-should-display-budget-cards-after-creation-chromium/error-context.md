@@ -41,7 +41,7 @@
           - generic [ref=e44]: T
           - generic [ref=e45]:
             - paragraph [ref=e46]: Test User
-            - paragraph [ref=e47]: budget+1764954083233@example.com
+            - paragraph [ref=e47]: budget+1764954084319@example.com
         - combobox [ref=e49] [cursor=pointer]:
           - img [ref=e50]
           - generic: English
@@ -67,7 +67,7 @@
             - img [ref=e71]
             - generic [ref=e74]:
               - paragraph [ref=e75]: Total Budget
-              - paragraph [ref=e76]: $500.00
+              - paragraph [ref=e76]: $1,000.00
           - generic [ref=e79]:
             - img [ref=e81]
             - generic [ref=e84]:
@@ -87,7 +87,7 @@
             - generic [ref=e102]:
               - generic [ref=e103]:
                 - paragraph [ref=e104]: $0.00
-                - paragraph [ref=e105]: of $500.00 monthly
+                - paragraph [ref=e105]: of $1,000.00 monthly
               - generic [ref=e106]:
                 - paragraph [ref=e107]: $0.00
                 - paragraph [ref=e108]: remaining
@@ -97,12 +97,7 @@
     - button [ref=e114] [cursor=pointer]:
       - img
   - region "Notifications (F8)":
-    - list [ref=e116]:
-      - listitem [ref=e117]:
-        - generic [ref=e119]: Budget created
-        - button [ref=e120] [cursor=pointer]:
-          - img [ref=e121]
-  - alert [ref=e125]
-  - generic [ref=e126]: "0"
-  - status [ref=e127]: Notification Budget created
+    - list
+  - alert [ref=e115]
+  - generic [ref=e116]: "0"
 ```

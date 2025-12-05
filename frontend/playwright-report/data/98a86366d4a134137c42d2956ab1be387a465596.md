@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e1]:
+- generic [active] [ref=e1]:
   - generic [ref=e2]:
     - complementary [ref=e3]:
       - generic [ref=e4]:
@@ -41,7 +41,7 @@
           - generic [ref=e44]: T
           - generic [ref=e45]:
             - paragraph [ref=e46]: Test User
-            - paragraph [ref=e47]: budget+1764954083233@example.com
+            - paragraph [ref=e47]: settings+1764954133602@example.com
         - combobox [ref=e49] [cursor=pointer]:
           - img [ref=e50]
           - generic: English
@@ -56,53 +56,51 @@
     - main [ref=e58]:
       - generic [ref=e60]:
         - generic [ref=e61]:
-          - generic [ref=e62]:
-            - heading "Budgets" [level=1] [ref=e63]
-            - paragraph [ref=e64]: Manage your spending limits
-          - button "Create Budget" [active] [ref=e65] [cursor=pointer]:
-            - img
-            - text: Create Budget
-        - generic [ref=e66]:
-          - generic [ref=e69]:
-            - img [ref=e71]
+          - heading "Settings" [level=1] [ref=e62]
+          - paragraph [ref=e63]: Account
+        - generic [ref=e64]:
+          - generic [ref=e65]:
+            - heading "Profile" [level=3] [ref=e66]:
+              - img [ref=e67]
+              - text: Profile
+            - paragraph [ref=e70]: Account
+          - generic [ref=e71]:
+            - generic [ref=e72]:
+              - text: Name
+              - textbox "Name" [ref=e73]: Test User
             - generic [ref=e74]:
-              - paragraph [ref=e75]: Total Budget
-              - paragraph [ref=e76]: $500.00
-          - generic [ref=e79]:
-            - img [ref=e81]
-            - generic [ref=e84]:
-              - paragraph [ref=e85]: Total Spent
-              - paragraph [ref=e86]: $0.00
-          - generic [ref=e89]:
-            - img [ref=e91]
-            - generic [ref=e93]:
-              - paragraph [ref=e94]: Over Budget
-              - paragraph [ref=e95]: 0 categories
-        - generic [ref=e97]:
-          - generic [ref=e98]:
-            - heading "Housing" [level=3] [ref=e99]
-            - button [ref=e100] [cursor=pointer]:
-              - img
-          - generic [ref=e101]:
-            - generic [ref=e102]:
-              - generic [ref=e103]:
-                - paragraph [ref=e104]: $0.00
-                - paragraph [ref=e105]: of $500.00 monthly
-              - generic [ref=e106]:
-                - paragraph [ref=e107]: $0.00
-                - paragraph [ref=e108]: remaining
-            - generic [ref=e109]:
-              - progressbar [ref=e110]
-              - generic [ref=e113]: 0.0% used
-    - button [ref=e114] [cursor=pointer]:
+              - text: Email
+              - textbox "Email" [disabled] [ref=e75]: settings+1764954133602@example.com
+              - paragraph [ref=e76]: Email cannot be changed
+        - generic [ref=e77]:
+          - generic [ref=e78]:
+            - heading "Preferences" [level=3] [ref=e79]:
+              - img [ref=e80]
+              - text: Preferences
+            - paragraph [ref=e82]: Preferences
+          - generic [ref=e84]:
+            - text: Default Currency
+            - combobox [ref=e85] [cursor=pointer]:
+              - generic:
+                - generic:
+                  - generic: $
+                  - generic: USD
+                  - generic: "- US Dollar"
+              - img [ref=e86]
+            - paragraph [ref=e88]: This currency will be used for new transactions
+        - generic [ref=e89]:
+          - generic [ref=e90]:
+            - heading "Logout" [level=3] [ref=e91]:
+              - img [ref=e92]
+              - text: Logout
+            - paragraph [ref=e95]: Logout
+          - button "Logout" [ref=e97] [cursor=pointer]:
+            - img
+            - text: Logout
+    - button [ref=e98] [cursor=pointer]:
       - img
   - region "Notifications (F8)":
-    - list [ref=e116]:
-      - listitem [ref=e117]:
-        - generic [ref=e119]: Budget created
-        - button [ref=e120] [cursor=pointer]:
-          - img [ref=e121]
-  - alert [ref=e125]
-  - generic [ref=e126]: "0"
-  - status [ref=e127]: Notification Budget created
+    - list
+  - alert [ref=e99]
+  - generic [ref=e100]: "0"
 ```

@@ -1,0 +1,68 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e6]:
+      - navigation [ref=e7]:
+        - generic [ref=e8]:
+          - img [ref=e10]
+          - generic [ref=e13]: WealthPath
+        - generic [ref=e14]:
+          - link "Sign in" [ref=e15] [cursor=pointer]:
+            - /url: /en/login
+            - button "Sign in" [ref=e16]
+          - link "Get Started" [ref=e17] [cursor=pointer]:
+            - /url: /en/register
+            - button "Get Started" [ref=e18]
+      - generic [ref=e19]:
+        - heading "Take Control of Your Financial Future" [level=1] [ref=e20]
+        - paragraph [ref=e21]: Track expenses, manage budgets, achieve savings goals, and eliminate debt. WealthPath helps you build the financial life you deserve.
+        - generic [ref=e22]:
+          - link "Start Free" [ref=e23] [cursor=pointer]:
+            - /url: /en/register
+            - button "Start Free" [ref=e24]:
+              - text: Start Free
+              - img
+          - link "Sign in" [ref=e25] [cursor=pointer]:
+            - /url: /en/login
+            - button "Sign in" [ref=e26]
+    - generic [ref=e28]:
+      - generic [ref=e29]:
+        - heading "Everything You Need to Manage Your Money" [level=2] [ref=e30]
+        - paragraph [ref=e31]: Powerful features designed to help you understand, control, and grow your finances.
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - img [ref=e35]
+          - heading "Income & Expense Tracking" [level=3] [ref=e37]
+          - paragraph [ref=e38]: Easily log and categorize your income and expenses to understand where your money goes.
+        - generic [ref=e39]:
+          - img [ref=e41]
+          - heading "Smart Budgeting" [level=3] [ref=e44]
+          - paragraph [ref=e45]: Create budgets for different categories and get alerts when you're approaching your limits.
+        - generic [ref=e46]:
+          - img [ref=e48]
+          - heading "Savings Goals" [level=3] [ref=e52]
+          - paragraph [ref=e53]: Set financial goals and track your progress with visual indicators and projections.
+        - generic [ref=e54]:
+          - img [ref=e56]
+          - heading "Debt Management" [level=3] [ref=e58]
+          - paragraph [ref=e59]: Track your loans, calculate payoff plans, and visualize your path to becoming debt-free.
+    - generic [ref=e62]:
+      - heading "Ready to Transform Your Finances?" [level=2] [ref=e63]
+      - paragraph [ref=e64]: Join thousands of users who are taking control of their financial future with WealthPath.
+      - link "Get Started Free" [ref=e65] [cursor=pointer]:
+        - /url: /en/register
+        - button "Get Started Free" [ref=e66]:
+          - text: Get Started Free
+          - img
+    - contentinfo [ref=e67]:
+      - generic [ref=e69]:
+        - generic [ref=e70]:
+          - img [ref=e72]
+          - generic [ref=e75]: WealthPath
+        - paragraph [ref=e76]: © 2025 WealthPath. All rights reserved.
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e77]
+```

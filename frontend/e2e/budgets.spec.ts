@@ -29,7 +29,7 @@ test.describe('Budgets', () => {
     await page.getByRole('dialog').getByRole('button', { name: /create|save|submit/i }).click();
     
     await waitForDialogToClose(page);
-    await expect(page.getByText(/\$500|500/)).toBeVisible();
+    await expect(page.getByText('$500.00', { exact: true }).first()).toBeVisible();
   });
 
   test('should edit existing budget', async ({ page }) => {
@@ -50,7 +50,7 @@ test.describe('Budgets', () => {
       await page.getByRole('dialog').getByRole('button', { name: /save|update|submit/i }).click();
       
       await waitForDialogToClose(page);
-      await expect(page.getByText(/\$600|600/)).toBeVisible();
+      await expect(page.getByText('$600.00', { exact: true }).first()).toBeVisible();
     }
   });
 
