@@ -28,7 +28,7 @@ func TestNewTransactionRepository(t *testing.T) {
 	t.Parallel()
 
 	db, _ := newMockDB(t)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	repo := NewTransactionRepository(db)
 	assert.NotNil(t, repo)
@@ -38,7 +38,7 @@ func TestTransactionRepository_Create(t *testing.T) {
 	t.Parallel()
 
 	db, mock := newMockDB(t)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	repo := NewTransactionRepository(db)
 
 	ctx := context.Background()
@@ -104,7 +104,7 @@ func TestTransactionRepository_GetByID(t *testing.T) {
 			t.Parallel()
 
 			db, mock := newMockDB(t)
-			defer db.Close()
+			defer func() { _ = db.Close() }()
 			repo := NewTransactionRepository(db)
 
 			ctx := context.Background()
@@ -132,7 +132,7 @@ func TestTransactionRepository_List(t *testing.T) {
 	t.Parallel()
 
 	db, mock := newMockDB(t)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	repo := NewTransactionRepository(db)
 
 	ctx := context.Background()
@@ -161,7 +161,7 @@ func TestTransactionRepository_Update(t *testing.T) {
 	t.Parallel()
 
 	db, mock := newMockDB(t)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	repo := NewTransactionRepository(db)
 
 	ctx := context.Background()
@@ -225,7 +225,7 @@ func TestTransactionRepository_Delete(t *testing.T) {
 			t.Parallel()
 
 			db, mock := newMockDB(t)
-			defer db.Close()
+			defer func() { _ = db.Close() }()
 			repo := NewTransactionRepository(db)
 
 			ctx := context.Background()
@@ -252,7 +252,7 @@ func TestTransactionRepository_GetMonthlyTotals(t *testing.T) {
 	t.Parallel()
 
 	db, mock := newMockDB(t)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	repo := NewTransactionRepository(db)
 
 	ctx := context.Background()
@@ -277,7 +277,7 @@ func TestTransactionRepository_GetExpensesByCategory(t *testing.T) {
 	t.Parallel()
 
 	db, mock := newMockDB(t)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	repo := NewTransactionRepository(db)
 
 	ctx := context.Background()
@@ -306,7 +306,7 @@ func TestTransactionRepository_GetSpentByCategory(t *testing.T) {
 	t.Parallel()
 
 	db, mock := newMockDB(t)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	repo := NewTransactionRepository(db)
 
 	ctx := context.Background()
@@ -331,7 +331,7 @@ func TestTransactionRepository_GetRecentTransactions(t *testing.T) {
 	t.Parallel()
 
 	db, mock := newMockDB(t)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	repo := NewTransactionRepository(db)
 
 	ctx := context.Background()
@@ -380,4 +380,3 @@ func TestErrTransactionNotFound(t *testing.T) {
 	assert.Error(t, ErrTransactionNotFound)
 	assert.Equal(t, "transaction not found", ErrTransactionNotFound.Error())
 }
-

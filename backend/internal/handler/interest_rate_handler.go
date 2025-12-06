@@ -249,4 +249,3 @@ func (h *InterestRateHandler) ScrapeRates(w http.ResponseWriter, r *http.Request
 		"count":   count,
 	})
 }
-

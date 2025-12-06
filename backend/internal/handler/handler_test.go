@@ -205,11 +205,12 @@ func TestTransactionHandler_Create_MissingFields(t *testing.T) {
 			}
 			_ = json.Unmarshal(body, &input)
 
-			if input.Type == "" {
+			switch {
+			case input.Type == "":
 				respondError(w, http.StatusBadRequest, "type is required")
-			} else if input.Amount == 0 {
+			case input.Amount == 0:
 				respondError(w, http.StatusBadRequest, "amount is required")
-			} else if input.Category == "" {
+			case input.Category == "":
 				respondError(w, http.StatusBadRequest, "category is required")
 			}
 

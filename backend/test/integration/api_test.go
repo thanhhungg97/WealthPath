@@ -211,10 +211,11 @@ func TestAPI_HealthCheck(t *testing.T) {
 	resp, err := http.Get(server.URL + "/api/health")
 
 	assert.NoError(t, err)
+	defer func() { _ = resp.Body.Close() }()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	var body map[string]string
-	json.NewDecoder(resp.Body).Decode(&body)
+	_ = json.NewDecoder(resp.Body).Decode(&body)
 	assert.Equal(t, "ok", body["status"])
 }
 
@@ -248,10 +249,11 @@ func TestAPI_Auth_Register(t *testing.T) {
 	resp, err := http.Post(server.URL+"/api/auth/register", "application/json", bytes.NewReader(body))
 
 	assert.NoError(t, err)
+	defer func() { _ = resp.Body.Close() }()
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 
 	var respBody map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&respBody)
+	_ = json.NewDecoder(resp.Body).Decode(&respBody)
 	assert.NotEmpty(t, respBody["token"])
 	mockUserService.AssertExpectations(t)
 }
@@ -275,6 +277,7 @@ func TestAPI_Auth_Register_MissingFields(t *testing.T) {
 	resp, err := http.Post(server.URL+"/api/auth/register", "application/json", bytes.NewReader(body))
 
 	assert.NoError(t, err)
+	defer func() { _ = resp.Body.Close() }()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 }
 
@@ -306,10 +309,11 @@ func TestAPI_Auth_Login(t *testing.T) {
 	resp, err := http.Post(server.URL+"/api/auth/login", "application/json", bytes.NewReader(body))
 
 	assert.NoError(t, err)
+	defer func() { _ = resp.Body.Close() }()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	var respBody map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&respBody)
+	_ = json.NewDecoder(resp.Body).Decode(&respBody)
 	assert.NotEmpty(t, respBody["token"])
 	mockUserService.AssertExpectations(t)
 }
@@ -335,6 +339,7 @@ func TestAPI_Auth_Login_InvalidCredentials(t *testing.T) {
 	resp, err := http.Post(server.URL+"/api/auth/login", "application/json", bytes.NewReader(body))
 
 	assert.NoError(t, err)
+	defer func() { _ = resp.Body.Close() }()
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 	mockUserService.AssertExpectations(t)
 }
@@ -376,7 +381,7 @@ func TestAPI_Transactions_Create(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, w.Code)
 
 	var respBody map[string]interface{}
-	json.NewDecoder(w.Body).Decode(&respBody)
+	_ = json.NewDecoder(w.Body).Decode(&respBody)
 	assert.Equal(t, txID.String(), respBody["id"])
 	mockTxService.AssertExpectations(t)
 }
@@ -405,7 +410,7 @@ func TestAPI_Transactions_List(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var respBody []map[string]interface{}
-	json.NewDecoder(w.Body).Decode(&respBody)
+	_ = json.NewDecoder(w.Body).Decode(&respBody)
 	assert.Len(t, respBody, 2)
 	mockTxService.AssertExpectations(t)
 }
@@ -561,6 +566,7 @@ func TestAPI_InvalidJSON(t *testing.T) {
 	resp, err := http.Post(server.URL+"/api/auth/register", "application/json", bytes.NewReader([]byte("invalid json")))
 
 	assert.NoError(t, err)
+	defer func() { _ = resp.Body.Close() }()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 }
 
@@ -574,6 +580,6 @@ func TestAPI_NotFound(t *testing.T) {
 	resp, err := http.Get(server.URL + "/api/nonexistent")
 
 	assert.NoError(t, err)
+	defer func() { _ = resp.Body.Close() }()
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
-

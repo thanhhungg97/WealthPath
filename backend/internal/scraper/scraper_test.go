@@ -217,4 +217,3 @@ func TestScraperRatesHaveLoanAndMortgage(t *testing.T) {
 	assert.Greater(t, productTypes["loan"], 0, "Should have loan rates")
 	assert.Greater(t, productTypes["mortgage"], 0, "Should have mortgage rates")
 }
-

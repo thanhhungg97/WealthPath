@@ -9,9 +9,9 @@ import (
 
 func TestLoad_Defaults(t *testing.T) {
 	// Clear environment to test defaults
-	os.Unsetenv("PORT")
-	os.Unsetenv("ENV")
-	os.Unsetenv("DATABASE_URL")
+	_ = os.Unsetenv("PORT")
+	_ = os.Unsetenv("ENV")
+	_ = os.Unsetenv("DATABASE_URL")
 
 	cfg := Load()
 
@@ -24,25 +24,14 @@ func TestLoad_Defaults(t *testing.T) {
 
 func TestLoad_WithEnvVars(t *testing.T) {
 	// Set test environment variables
-	os.Setenv("PORT", "9090")
-	os.Setenv("ENV", "production")
-	os.Setenv("DATABASE_URL", "postgres://test:5432/testdb")
-	os.Setenv("JWT_SECRET", "test-secret")
-	os.Setenv("ALLOWED_ORIGINS", "http://example.com,http://test.com")
-	os.Setenv("GOOGLE_CLIENT_ID", "google-id")
-	os.Setenv("OPENAI_API_KEY", "openai-key")
-	os.Setenv("ENABLE_AI_CHAT", "false")
-
-	defer func() {
-		os.Unsetenv("PORT")
-		os.Unsetenv("ENV")
-		os.Unsetenv("DATABASE_URL")
-		os.Unsetenv("JWT_SECRET")
-		os.Unsetenv("ALLOWED_ORIGINS")
-		os.Unsetenv("GOOGLE_CLIENT_ID")
-		os.Unsetenv("OPENAI_API_KEY")
-		os.Unsetenv("ENABLE_AI_CHAT")
-	}()
+	t.Setenv("PORT", "9090")
+	t.Setenv("ENV", "production")
+	t.Setenv("DATABASE_URL", "postgres://test:5432/testdb")
+	t.Setenv("JWT_SECRET", "test-secret")
+	t.Setenv("ALLOWED_ORIGINS", "http://example.com,http://test.com")
+	t.Setenv("GOOGLE_CLIENT_ID", "google-id")
+	t.Setenv("OPENAI_API_KEY", "openai-key")
+	t.Setenv("ENABLE_AI_CHAT", "false")
 
 	cfg := Load()
 
@@ -101,8 +90,7 @@ func TestConfig_IsProduction(t *testing.T) {
 }
 
 func TestGetEnv(t *testing.T) {
-	os.Setenv("TEST_VAR", "test_value")
-	defer os.Unsetenv("TEST_VAR")
+	t.Setenv("TEST_VAR", "test_value")
 
 	assert.Equal(t, "test_value", getEnv("TEST_VAR", "default"))
 	assert.Equal(t, "default", getEnv("NON_EXISTENT_VAR", "default"))
@@ -128,10 +116,9 @@ func TestGetBoolEnv(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.setEnv {
-				os.Setenv("TEST_BOOL", tt.envValue)
-				defer os.Unsetenv("TEST_BOOL")
+				t.Setenv("TEST_BOOL", tt.envValue)
 			} else {
-				os.Unsetenv("TEST_BOOL")
+				_ = os.Unsetenv("TEST_BOOL")
 			}
 			assert.Equal(t, tt.expected, getBoolEnv("TEST_BOOL", tt.defaultValue))
 		})

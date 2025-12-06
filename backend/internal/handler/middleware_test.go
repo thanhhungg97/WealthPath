@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,8 +11,7 @@ import (
 
 func TestAuthMiddleware(t *testing.T) {
 	// Set JWT secret for tests
-	os.Setenv("JWT_SECRET", "test-secret")
-	defer os.Unsetenv("JWT_SECRET")
+	t.Setenv("JWT_SECRET", "test-secret")
 
 	tests := []struct {
 		name       string
@@ -45,8 +43,6 @@ func TestAuthMiddleware(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
 			nextCalled := false
 			next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				nextCalled = true
@@ -72,8 +68,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 func TestAuthMiddleware_ValidToken(t *testing.T) {
 	// Set JWT secret for tests
-	os.Setenv("JWT_SECRET", "test-secret")
-	defer os.Unsetenv("JWT_SECRET")
+	t.Setenv("JWT_SECRET", "test-secret")
 
 	// Generate a valid token
 	token, err := service.GenerateTokenForTest()
@@ -101,4 +96,3 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 		assert.True(t, nextCalled)
 	}
 }
-

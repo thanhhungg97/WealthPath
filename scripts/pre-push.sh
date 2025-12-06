@@ -38,9 +38,11 @@ if ! go mod tidy; then
 fi
 
 echo "  → Running linter..."
-if ! make lint 2>/dev/null; then
-    echo -e "${YELLOW}⚠️  Backend: Linter not available or has warnings${NC}"
-    # Don't fail on lint warnings, just warn
+if ! make lint; then
+    echo -e "${RED}✗ Backend: Lint failed${NC}"
+    ERRORS=$((ERRORS + 1))
+else
+    echo -e "${GREEN}✓ Backend: Lint passed${NC}"
 fi
 
 echo "  → Building backend..."

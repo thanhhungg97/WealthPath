@@ -1,8 +1,6 @@
 package service
 
 import (
-	"bytes"
-	"io"
 	"net/http"
 	"os"
 	"testing"
@@ -29,14 +27,6 @@ func (m *MockHTTPClient) PostForm(url string, data map[string][]string) (*http.R
 	return m.DoFunc(req)
 }
 
-// Helper to create mock response
-func mockResponse(statusCode int, body string) *http.Response {
-	return &http.Response{
-		StatusCode: statusCode,
-		Body:       io.NopCloser(bytes.NewBufferString(body)),
-	}
-}
-
 // ================== Facebook Provider Tests ==================
 
 func TestFacebookProvider_Name(t *testing.T) {
@@ -57,34 +47,34 @@ func TestFacebookProvider_AuthURL(t *testing.T) {
 		{
 			name: "with valid env vars",
 			envSetup: func() {
-				os.Setenv("FACEBOOK_APP_ID", "test-app-id")
-				os.Setenv("FACEBOOK_REDIRECT_URI", "http://localhost/callback")
+				_ = os.Setenv("FACEBOOK_APP_ID", "test-app-id")
+				_ = os.Setenv("FACEBOOK_REDIRECT_URI", "http://localhost/callback")
 			},
 			envClean: func() {
-				os.Unsetenv("FACEBOOK_APP_ID")
-				os.Unsetenv("FACEBOOK_REDIRECT_URI")
+				_ = os.Unsetenv("FACEBOOK_APP_ID")
+				_ = os.Unsetenv("FACEBOOK_REDIRECT_URI")
 			},
 			wantEmpty: false,
 		},
 		{
 			name: "missing app id",
 			envSetup: func() {
-				os.Unsetenv("FACEBOOK_APP_ID")
-				os.Setenv("FACEBOOK_REDIRECT_URI", "http://localhost/callback")
+				_ = os.Unsetenv("FACEBOOK_APP_ID")
+				_ = os.Setenv("FACEBOOK_REDIRECT_URI", "http://localhost/callback")
 			},
 			envClean: func() {
-				os.Unsetenv("FACEBOOK_REDIRECT_URI")
+				_ = os.Unsetenv("FACEBOOK_REDIRECT_URI")
 			},
 			wantEmpty: true,
 		},
 		{
 			name: "missing redirect uri",
 			envSetup: func() {
-				os.Setenv("FACEBOOK_APP_ID", "test-app-id")
-				os.Unsetenv("FACEBOOK_REDIRECT_URI")
+				_ = os.Setenv("FACEBOOK_APP_ID", "test-app-id")
+				_ = os.Unsetenv("FACEBOOK_REDIRECT_URI")
 			},
 			envClean: func() {
-				os.Unsetenv("FACEBOOK_APP_ID")
+				_ = os.Unsetenv("FACEBOOK_APP_ID")
 			},
 			wantEmpty: true,
 		},
@@ -129,34 +119,34 @@ func TestGoogleProvider_AuthURL(t *testing.T) {
 		{
 			name: "with valid env vars",
 			envSetup: func() {
-				os.Setenv("GOOGLE_CLIENT_ID", "test-client-id")
-				os.Setenv("GOOGLE_REDIRECT_URI", "http://localhost/callback")
+				_ = os.Setenv("GOOGLE_CLIENT_ID", "test-client-id")
+				_ = os.Setenv("GOOGLE_REDIRECT_URI", "http://localhost/callback")
 			},
 			envClean: func() {
-				os.Unsetenv("GOOGLE_CLIENT_ID")
-				os.Unsetenv("GOOGLE_REDIRECT_URI")
+				_ = os.Unsetenv("GOOGLE_CLIENT_ID")
+				_ = os.Unsetenv("GOOGLE_REDIRECT_URI")
 			},
 			wantEmpty: false,
 		},
 		{
 			name: "missing client id",
 			envSetup: func() {
-				os.Unsetenv("GOOGLE_CLIENT_ID")
-				os.Setenv("GOOGLE_REDIRECT_URI", "http://localhost/callback")
+				_ = os.Unsetenv("GOOGLE_CLIENT_ID")
+				_ = os.Setenv("GOOGLE_REDIRECT_URI", "http://localhost/callback")
 			},
 			envClean: func() {
-				os.Unsetenv("GOOGLE_REDIRECT_URI")
+				_ = os.Unsetenv("GOOGLE_REDIRECT_URI")
 			},
 			wantEmpty: true,
 		},
 		{
 			name: "missing redirect uri",
 			envSetup: func() {
-				os.Setenv("GOOGLE_CLIENT_ID", "test-client-id")
-				os.Unsetenv("GOOGLE_REDIRECT_URI")
+				_ = os.Setenv("GOOGLE_CLIENT_ID", "test-client-id")
+				_ = os.Unsetenv("GOOGLE_REDIRECT_URI")
 			},
 			envClean: func() {
-				os.Unsetenv("GOOGLE_CLIENT_ID")
+				_ = os.Unsetenv("GOOGLE_CLIENT_ID")
 			},
 			wantEmpty: true,
 		},
@@ -211,4 +201,3 @@ func TestOAuthUser_Struct(t *testing.T) {
 	assert.Equal(t, "Test User", user.Name)
 	assert.Equal(t, "https://example.com/avatar.jpg", user.AvatarURL)
 }
-

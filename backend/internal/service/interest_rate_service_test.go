@@ -207,4 +207,3 @@ func TestInterestRateService_SeedDefaultRates(t *testing.T) {
 	// Should have called Upsert multiple times (once for each seeded rate)
 	assert.GreaterOrEqual(t, len(mockRepo.Calls), 20) // At least 20 rates seeded
 }
-

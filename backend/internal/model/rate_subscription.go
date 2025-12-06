@@ -46,4 +46,3 @@ type RateChangeAlert struct {
 	Change       decimal.Decimal // Positive = increase, negative = decrease
 	ChangeType   string          // "increase" or "decrease"
 }
-

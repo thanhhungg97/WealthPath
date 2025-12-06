@@ -139,4 +139,3 @@ func (s *InterestRateService) SeedDefaultRates(ctx context.Context) error {
 
 	return s.BulkUpsertRates(ctx, sampleRates)
 }
-

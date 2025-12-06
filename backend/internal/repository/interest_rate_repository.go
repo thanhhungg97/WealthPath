@@ -63,7 +63,7 @@ func (r *interestRateRepository) List(ctx context.Context, productType string, t
 	if bankCode != "" {
 		query += fmt.Sprintf(" AND bank_code = $%d", argNum)
 		args = append(args, bankCode)
-		argNum++
+		// argNum not incremented as it's the last parameter
 	}
 
 	query += " ORDER BY term_months ASC, rate DESC"
@@ -151,4 +151,3 @@ func (r *interestRateRepository) GetHistory(ctx context.Context, bankCode, produ
 
 	return history, nil
 }
-

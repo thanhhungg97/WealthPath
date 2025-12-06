@@ -120,7 +120,7 @@ func (s *vietcombankScraper) ScrapeRates(ctx context.Context) ([]model.InterestR
 	if err != nil {
 		return s.getFallbackRates(), nil
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return s.getFallbackRates(), nil

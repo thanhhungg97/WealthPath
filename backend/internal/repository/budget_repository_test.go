@@ -18,7 +18,7 @@ func TestNewBudgetRepository(t *testing.T) {
 	t.Parallel()
 
 	mockDB, _, _ := sqlmock.New()
-	defer mockDB.Close()
+	defer func() { _ = mockDB.Close() }()
 	db := sqlx.NewDb(mockDB, "sqlmock")
 
 	repo := NewBudgetRepository(db)
@@ -29,7 +29,7 @@ func TestBudgetRepository_Create(t *testing.T) {
 	t.Parallel()
 
 	mockDB, mock, _ := sqlmock.New()
-	defer mockDB.Close()
+	defer func() { _ = mockDB.Close() }()
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	repo := NewBudgetRepository(db)
 
@@ -95,7 +95,7 @@ func TestBudgetRepository_GetByID(t *testing.T) {
 			t.Parallel()
 
 			mockDB, mock, _ := sqlmock.New()
-			defer mockDB.Close()
+			defer func() { _ = mockDB.Close() }()
 			db := sqlx.NewDb(mockDB, "sqlmock")
 			repo := NewBudgetRepository(db)
 
@@ -124,7 +124,7 @@ func TestBudgetRepository_List(t *testing.T) {
 	t.Parallel()
 
 	mockDB, mock, _ := sqlmock.New()
-	defer mockDB.Close()
+	defer func() { _ = mockDB.Close() }()
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	repo := NewBudgetRepository(db)
 
@@ -150,7 +150,7 @@ func TestBudgetRepository_Update(t *testing.T) {
 	t.Parallel()
 
 	mockDB, mock, _ := sqlmock.New()
-	defer mockDB.Close()
+	defer func() { _ = mockDB.Close() }()
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	repo := NewBudgetRepository(db)
 
@@ -214,7 +214,7 @@ func TestBudgetRepository_Delete(t *testing.T) {
 			t.Parallel()
 
 			mockDB, mock, _ := sqlmock.New()
-			defer mockDB.Close()
+			defer func() { _ = mockDB.Close() }()
 			db := sqlx.NewDb(mockDB, "sqlmock")
 			repo := NewBudgetRepository(db)
 
@@ -242,7 +242,7 @@ func TestBudgetRepository_GetActiveForUser(t *testing.T) {
 	t.Parallel()
 
 	mockDB, mock, _ := sqlmock.New()
-	defer mockDB.Close()
+	defer func() { _ = mockDB.Close() }()
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	repo := NewBudgetRepository(db)
 
@@ -269,4 +269,3 @@ func TestErrBudgetNotFound(t *testing.T) {
 	assert.Error(t, ErrBudgetNotFound)
 	assert.Equal(t, "budget not found", ErrBudgetNotFound.Error())
 }
-

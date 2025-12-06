@@ -42,10 +42,8 @@ func TestFromContext(t *testing.T) {
 		wantNotNil bool
 	}{
 		{
-			name: "empty context",
-			setupCtx: func() context.Context {
-				return context.Background()
-			},
+			name:       "empty context",
+			setupCtx:   context.Background,
 			wantNotNil: true,
 		},
 		{
@@ -101,8 +99,8 @@ func TestConvenienceFunctions(t *testing.T) {
 	Debug("test debug", "key", "value")
 	Warn("test warn", "key", "value")
 
-	w.Close()
-	r.Close()
+	_ = w.Close()
+	_ = r.Close()
 
 	// If we got here without panic, test passes
 	assert.True(t, true)
@@ -114,4 +112,3 @@ func TestLoggerWithProductionEnv(t *testing.T) {
 	l := Logger()
 	assert.NotNil(t, l)
 }
-

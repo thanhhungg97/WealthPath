@@ -98,4 +98,3 @@ func (r *SavingsGoalRepository) GetTotalSavings(ctx context.Context, userID uuid
 	err := r.db.GetContext(ctx, &total, query, userID)
 	return total, err
 }
-

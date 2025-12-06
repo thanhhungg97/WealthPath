@@ -281,4 +281,3 @@ func TestSentinelErrors(t *testing.T) {
 	assert.NotNil(t, ErrValidation)
 	assert.NotNil(t, ErrInvalidCredentials)
 }
-

@@ -17,7 +17,7 @@ func TestNewUserRepository(t *testing.T) {
 	t.Parallel()
 
 	mockDB, _, _ := sqlmock.New()
-	defer mockDB.Close()
+	defer func() { _ = mockDB.Close() }()
 	db := sqlx.NewDb(mockDB, "sqlmock")
 
 	repo := NewUserRepository(db)
@@ -28,7 +28,7 @@ func TestUserRepository_Create(t *testing.T) {
 	t.Parallel()
 
 	mockDB, mock, _ := sqlmock.New()
-	defer mockDB.Close()
+	defer func() { _ = mockDB.Close() }()
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	repo := NewUserRepository(db)
 
@@ -97,7 +97,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 			t.Parallel()
 
 			mockDB, mock, _ := sqlmock.New()
-			defer mockDB.Close()
+			defer func() { _ = mockDB.Close() }()
 			db := sqlx.NewDb(mockDB, "sqlmock")
 			repo := NewUserRepository(db)
 
@@ -160,7 +160,7 @@ func TestUserRepository_GetByID(t *testing.T) {
 			t.Parallel()
 
 			mockDB, mock, _ := sqlmock.New()
-			defer mockDB.Close()
+			defer func() { _ = mockDB.Close() }()
 			db := sqlx.NewDb(mockDB, "sqlmock")
 			repo := NewUserRepository(db)
 
@@ -189,7 +189,7 @@ func TestUserRepository_Update(t *testing.T) {
 	t.Parallel()
 
 	mockDB, mock, _ := sqlmock.New()
-	defer mockDB.Close()
+	defer func() { _ = mockDB.Close() }()
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	repo := NewUserRepository(db)
 
@@ -257,7 +257,7 @@ func TestUserRepository_GetByOAuth(t *testing.T) {
 			t.Parallel()
 
 			mockDB, mock, _ := sqlmock.New()
-			defer mockDB.Close()
+			defer func() { _ = mockDB.Close() }()
 			db := sqlx.NewDb(mockDB, "sqlmock")
 			repo := NewUserRepository(db)
 
@@ -322,7 +322,7 @@ func TestUserRepository_EmailExists(t *testing.T) {
 			t.Parallel()
 
 			mockDB, mock, _ := sqlmock.New()
-			defer mockDB.Close()
+			defer func() { _ = mockDB.Close() }()
 			db := sqlx.NewDb(mockDB, "sqlmock")
 			repo := NewUserRepository(db)
 
@@ -346,7 +346,7 @@ func TestUserRepository_UpdateLastLogin(t *testing.T) {
 	t.Parallel()
 
 	mockDB, mock, _ := sqlmock.New()
-	defer mockDB.Close()
+	defer func() { _ = mockDB.Close() }()
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	repo := NewUserRepository(db)
 
@@ -407,7 +407,7 @@ func TestUserRepository_GetOrCreateByOAuth(t *testing.T) {
 			t.Parallel()
 
 			mockDB, mock, _ := sqlmock.New()
-			defer mockDB.Close()
+			defer func() { _ = mockDB.Close() }()
 			db := sqlx.NewDb(mockDB, "sqlmock")
 			repo := NewUserRepository(db)
 

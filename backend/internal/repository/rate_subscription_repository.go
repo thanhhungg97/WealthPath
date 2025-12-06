@@ -157,4 +157,3 @@ func (r *rateSubscriptionRepository) LogNotification(ctx context.Context, notifi
 	}
 	return nil
 }
-

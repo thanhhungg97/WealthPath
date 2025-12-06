@@ -63,4 +63,3 @@ var StandardTerms = []struct {
 	{24, "24 tháng"},
 	{36, "36 tháng"},
 }
-

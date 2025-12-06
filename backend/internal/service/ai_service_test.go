@@ -64,7 +64,7 @@ func TestAIService_Chat_NoAPIKey(t *testing.T) {
 	t.Parallel()
 
 	// Ensure no API key is set
-	os.Unsetenv("OPENAI_API_KEY")
+	_ = os.Unsetenv("OPENAI_API_KEY")
 
 	service := NewAIService(nil, nil, nil)
 	userID := uuid.New()

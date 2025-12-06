@@ -73,8 +73,8 @@ type OpenAIResponse struct {
 
 // ParsedIntent represents the extracted intent from a user message.
 type ParsedIntent struct {
-	Action      string  `json:"action"`      // add_transaction, add_budget, add_savings_goal, query, unknown
-	Type        string  `json:"type"`        // income/expense for transactions
+	Action      string  `json:"action"` // add_transaction, add_budget, add_savings_goal, query, unknown
+	Type        string  `json:"type"`   // income/expense for transactions
 	Amount      float64 `json:"amount"`
 	Category    string  `json:"category"`
 	Description string  `json:"description"`
