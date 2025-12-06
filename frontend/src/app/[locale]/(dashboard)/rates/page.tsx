@@ -43,6 +43,7 @@ import { api, InterestRate, Bank, RateHistoryEntry } from '@/lib/api';
 // Types imported from @/lib/api
 
 const TERM_OPTIONS = [
+  { value: '0', label: 'Không kỳ hạn' },
   { value: '1', label: '1 tháng' },
   { value: '3', label: '3 tháng' },
   { value: '6', label: '6 tháng' },
@@ -340,7 +341,7 @@ export default function InterestRatesPage() {
                             alt={rate.bankName}
                             width={48}
                             height={48}
-                            className="object-cover"
+                            className="object-cover w-full h-full"
                           />
                         </div>
 
