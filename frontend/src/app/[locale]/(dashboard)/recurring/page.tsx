@@ -7,7 +7,8 @@ import {
   RecurringTransaction,
   CreateRecurringInput,
 } from "@/lib/api"
-import { formatCurrency, formatDate } from "@/lib/utils"
+import { formatDate } from "@/lib/utils"
+import { useCurrency } from "@/hooks/use-currency"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CurrencyInput } from "@/components/ui/currency-input"
@@ -80,6 +81,7 @@ const INCOME_CATEGORIES = [
 ]
 
 export default function RecurringPage() {
+  const { formatCurrency } = useCurrency()
   const [isOpen, setIsOpen] = useState(false)
   const [type, setType] = useState<"income" | "expense">("expense")
   const [amount, setAmount] = useState("")
@@ -407,6 +409,7 @@ function RecurringItem({
   onResume: () => void
   onDelete: () => void
 }) {
+  const { formatCurrency } = useCurrency()
   const isIncome = item.type === "income"
   const frequencyKey = item.frequency === "biweekly" ? "biWeekly" : item.frequency
   const frequencyLabel = t(`recurring.${frequencyKey}`)

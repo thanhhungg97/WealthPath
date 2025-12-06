@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api, SavingsGoal, CreateSavingsGoalInput } from "@/lib/api"
-import { formatCurrency, formatPercent, formatDate } from "@/lib/utils"
+import { formatPercent, formatDate } from "@/lib/utils"
+import { useCurrency } from "@/hooks/use-currency"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CurrencyInput } from "@/components/ui/currency-input"
@@ -34,6 +35,7 @@ const COLORS = [
 ]
 
 export default function SavingsPage() {
+  const { formatCurrency } = useCurrency()
   const [isOpen, setIsOpen] = useState(false)
   const [contributeId, setContributeId] = useState<string | null>(null)
   const [contributeAmount, setContributeAmount] = useState("")

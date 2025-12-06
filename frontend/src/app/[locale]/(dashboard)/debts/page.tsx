@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api, Debt, CreateDebtInput, PayoffPlan } from "@/lib/api"
-import { formatCurrency, formatDate, formatPercent } from "@/lib/utils"
+import { formatDate, formatPercent } from "@/lib/utils"
+import { useCurrency } from "@/hooks/use-currency"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CurrencyInput } from "@/components/ui/currency-input"
@@ -52,6 +53,7 @@ const DEBT_TYPES = [
 ]
 
 export default function DebtsPage() {
+  const { formatCurrency } = useCurrency()
   const [isOpen, setIsOpen] = useState(false)
   const [paymentDebtId, setPaymentDebtId] = useState<string | null>(null)
   const [paymentAmount, setPaymentAmount] = useState("")

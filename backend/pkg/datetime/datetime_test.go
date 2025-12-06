@@ -289,4 +289,3 @@ func TestEndOfYear(t *testing.T) {
 	assert.Equal(t, 59, result.Minute())
 	assert.Equal(t, 59, result.Second())
 }
-

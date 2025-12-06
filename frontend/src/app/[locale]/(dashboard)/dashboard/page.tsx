@@ -2,7 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { api, DashboardData, UpcomingBill } from "@/lib/api"
-import { formatCurrency, formatDate } from "@/lib/utils"
+import { formatDate } from "@/lib/utils"
+import { useCurrency } from "@/hooks/use-currency"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import {
@@ -34,6 +35,7 @@ import {
 const COLORS = ["#8B5CF6", "#06B6D4", "#10B981", "#F59E0B", "#EF4444", "#EC4899", "#6366F1", "#84CC16"]
 
 export default function DashboardPage() {
+  const { formatCurrency } = useCurrency()
   const t = useTranslations()
   const locale = useLocale()
   const { data, isLoading } = useQuery<DashboardData>({

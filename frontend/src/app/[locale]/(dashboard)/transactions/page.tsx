@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api, Transaction, CreateTransactionInput } from "@/lib/api"
-import { formatCurrency, formatDate } from "@/lib/utils"
+import { formatDate } from "@/lib/utils"
+import { useCurrency } from "@/hooks/use-currency"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CurrencyInput } from "@/components/ui/currency-input"
@@ -268,6 +269,8 @@ function TransactionList({
   onDelete: (id: string) => void
   t: ReturnType<typeof useTranslations>
 }) {
+  const { formatCurrency } = useCurrency()
+  
   if (isLoading) {
     return (
       <div className="space-y-4">

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { api, InterestCalculatorResult } from "@/lib/api"
-import { formatCurrency } from "@/lib/utils"
+import { useCurrency } from "@/hooks/use-currency"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calculator, DollarSign, Percent, Calendar, TrendingUp, Loader2 } from "lucide-react"
 
 export default function CalculatorPage() {
+  const { formatCurrency } = useCurrency()
   const [isCalculating, setIsCalculating] = useState(false)
   const [result, setResult] = useState<InterestCalculatorResult | null>(null)
 

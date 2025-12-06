@@ -246,4 +246,3 @@ func TestMoneyString(t *testing.T) {
 		assert.Equal(t, "100.5", m.String())
 	})
 }
-
