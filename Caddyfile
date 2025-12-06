@@ -17,12 +17,13 @@
     @admin path /admin /admin/*
     reverse_proxy @admin admin:8081
     
-    # Dozzle log viewer - Tailscale VPN only
-    # Tailscale IPs: 100.64.0.0/10
-    # Add your home IP if needed: e.g., 203.0.113.50
+    # Dozzle log viewer - VPN only
+    # AWS VPN typically uses: 10.0.0.0/8, 172.16.0.0/12
+    # Tailscale uses: 100.64.0.0/10
+    # Adjust these ranges to match your VPN CIDR
     @logs {
         path /logs /logs/*
-        remote_ip 100.64.0.0/10
+        remote_ip 10.0.0.0/8 172.16.0.0/12 100.64.0.0/10
     }
     reverse_proxy @logs dozzle:8080
     
