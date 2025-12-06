@@ -18,7 +18,7 @@
           - text: Email
           - textbox "Email" [ref=e17]:
             - /placeholder: you@example.com
-            - text: recurring+1764954104259@example.com
+            - text: test+1764993707707@example.com
         - generic [ref=e18]:
           - text: Password
           - textbox "Password" [ref=e19]:

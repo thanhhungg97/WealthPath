@@ -13,14 +13,17 @@
           - text: Name
           - textbox "Name" [ref=e15]:
             - /placeholder: John Doe
+            - text: Test User
         - generic [ref=e16]:
           - text: Email
           - textbox "Email" [ref=e17]:
             - /placeholder: you@example.com
+            - text: test+1764993707707@example.com
         - generic [ref=e18]:
           - text: Password
           - textbox "Password" [ref=e19]:
             - /placeholder: ••••••••
+            - text: testpassword123
         - button "Create account" [ref=e20] [cursor=pointer]
       - paragraph [ref=e21]:
         - text: Already have an account?
@@ -28,4 +31,5 @@
           - /url: /login
   - region "Notifications (F8)":
     - list
+  - alert [ref=e23]
 ```
