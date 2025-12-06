@@ -1,7 +1,7 @@
-name: Build and Push Docker Images
+name: Build, Push & Deploy
 
-# This workflow builds images on pushes to main for development/staging
-# For production releases, use the Release workflow by creating a tag
+# This workflow builds images on pushes to main and auto-deploys
+# For manual deployment, use workflow_dispatch
 
 on:
   push:
@@ -13,12 +13,56 @@ on:
       - 'admin/**'
       - '.github/workflows/build-push.yml'
   workflow_dispatch:
+    inputs:
+      skip_deploy:
+        description: 'Skip deployment after build'
+        required: false
+        default: 'false'
+        type: boolean
 
 env:
   REGISTRY: ghcr.io
 
 jobs:
+  # Run tests first
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Run tests
+        working-directory: ./backend
+        run: go test ./... -v -race -coverprofile=coverage.out
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./backend/coverage.out
+          flags: backend
+        continue-on-error: true
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+      - name: Run lint
+        working-directory: ./frontend
+        run: npm run lint
+      - name: Run tests
+        working-directory: ./frontend
+        run: npm test
+
   build-backend:
+    needs: [test-backend]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -47,6 +91,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=backend
 
   build-frontend:
+    needs: [test-frontend]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -129,3 +174,76 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha,scope=admin
           cache-to: type=gha,mode=max,scope=admin
+
+  # Auto-deploy after all builds succeed
+  deploy:
+    needs: [build-backend, build-frontend, build-migrations, build-admin]
+    if: ${{ github.event.inputs.skip_deploy != 'true' }}
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Ansible
+        run: |
+          pip install ansible
+          ansible-galaxy install -r ansible/requirements.yml || true
+      
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/wealthpath_key
+          chmod 600 ~/.ssh/wealthpath_key
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts 2>/dev/null || true
+      
+      - name: Deploy with Ansible
+        working-directory: ansible
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          DOMAIN: ${{ secrets.DOMAIN }}
+          USE_SSL: "true"
+          USE_ZEROSSL: "true"
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+          IMAGE_TAG: "latest"
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          FACEBOOK_APP_ID: ${{ secrets.FACEBOOK_APP_ID }}
+          FACEBOOK_APP_SECRET: ${{ secrets.FACEBOOK_APP_SECRET }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          echo "🚀 Auto-deploying latest images..."
+          ansible-playbook playbook.yml -v
+      
+      - name: Health check
+        run: |
+          echo "⏳ Waiting for services to start..."
+          sleep 20
+          
+          echo "🔍 Checking API health..."
+          for i in {1..5}; do
+            if curl -sf https://${{ secrets.DOMAIN }}/api/health; then
+              echo ""
+              echo "✅ API is healthy"
+              break
+            fi
+            echo "Attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
+          
+          echo "🔍 Checking Frontend..."
+          curl -sf -o /dev/null https://${{ secrets.DOMAIN }} && echo "✅ Frontend is up" || echo "⚠️ Frontend check pending"
+          
+          echo "🎉 Deployment complete!"
+      
+      - name: Notify on failure
+        if: failure()
+        run: echo "❌ Deployment failed! Check logs above."
