@@ -342,7 +342,6 @@ export default function InterestRatesPage() {
                               width={32}
                               height={32}
                               className="object-contain"
-                              unoptimized
                             />
                           ) : (
                             <Building2 className="h-6 w-6 text-muted-foreground" />
@@ -500,7 +499,6 @@ export default function InterestRatesPage() {
                             width={24}
                             height={24}
                             className="object-contain"
-                            unoptimized
                           />
                         ) : (
                           <Building2 className="h-5 w-5 text-muted-foreground" />
